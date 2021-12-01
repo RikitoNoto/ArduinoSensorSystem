@@ -14,5 +14,5 @@ void setup()
 
 void loop()
 {
-    lcd.display("Testing!", RobotLCD::TEXT_SIZE_MIDDLE);
+    lcd.display("Testing!");
 }

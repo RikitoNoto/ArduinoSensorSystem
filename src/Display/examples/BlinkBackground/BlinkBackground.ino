@@ -9,6 +9,9 @@ RobotLCD lcd = RobotLCD(cs, dc, rst);
 Color::COLOR color1 = Color::COLOR::RED;
 Color::COLOR color2 = Color::COLOR::BLUE;
 
+template<typename T>
+void a()
+{}
 void setup()
 {
     lcd.begin();
