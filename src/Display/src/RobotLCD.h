@@ -14,12 +14,8 @@ class RobotLCD : public Display_if
         RobotLCD(BYTE cs, BYTE dc, BYTE reset);
         virtual ~RobotLCD();
         virtual void begin();
-        virtual void display(char* str, BYTE size);
-            static const BYTE TEXT_SIZE_MAXIMUM;
-            static const BYTE TEXT_SIZE_LARGE;
-            static const BYTE TEXT_SIZE_MIDDLE;
-            static const BYTE TEXT_SIZE_SMALL;
-            static const BYTE TEXT_SIZE_MINIMUM;
+        virtual void display(char* str, Point<DWORD>* pos, BYTE size);
+        virtual void display(char* str, Point<DWORD>* pos, BYTE size, Color::COLOR color);
 
         virtual void setBackgroundColor(Color::COLOR color);
 

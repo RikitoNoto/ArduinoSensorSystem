@@ -18,7 +18,7 @@ private:
 };
 
 /**
-* constructor.
+* @brief constructor.
 * @param[in] x initialize the member of x by that.
 * @param[in] y initialize the member of y by that.
 */
@@ -30,7 +30,7 @@ Point<TYPE>::Point(TYPE x, TYPE y)
 }
 
 /**
-* Return x.
+* @brief Return x.
 *
 * @return TYPE x
 */
@@ -41,7 +41,7 @@ TYPE Point<TYPE>::getX(void)
 }
 
 /**
-* Return y.
+* @brief Return y.
 *
 * @return TYPE y
 */
@@ -52,7 +52,7 @@ TYPE Point<TYPE>::getY(void)
 }
 
 /**
-* Set x.
+* @brief Set x.
 */
 template<typename TYPE>
 void Point<TYPE>::setX(TYPE x)
@@ -61,7 +61,7 @@ void Point<TYPE>::setX(TYPE x)
 }
 
 /**
-* Set y.
+* @brief Set y.
 */
 template<typename TYPE>
 void Point<TYPE>::setY(TYPE y)

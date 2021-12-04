@@ -52,3 +52,17 @@ Color::ColorRGB* Color::setColorRGB(BYTE r, BYTE g, BYTE b, ColorRGB* color_stru
     
     return color_struct;
 }
+
+
+BOOL Color::isSameColorRGB(const ColorRGB* color1, const ColorRGB* color2)
+{
+    BOOL result = FALSE;
+    if( (nullptr != color1) && (nullptr != color2))
+    {
+        if( (color1->m_r == color2->m_r) && (color1->m_g == color2->m_g) && (color1->m_b == color2->m_b))
+        {
+            result = TRUE;
+        }
+    }
+    return result;
+}
