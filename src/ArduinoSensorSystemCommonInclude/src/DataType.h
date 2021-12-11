@@ -6,5 +6,6 @@ typedef unsigned short WORD;    // 2byte
 typedef unsigned long DWORD;    // 4byte
 
 typedef enum{ FALSE = 0, TRUE = 1 } BOOL;
+typedef enum{ FAIL = FALSE, SUCCESS = TRUE } RESULT;
 
 #endif // _DATA_TYPE_H_
