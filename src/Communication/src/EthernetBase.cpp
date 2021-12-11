@@ -1,4 +1,7 @@
 #include "EthernetBase.h"
+#include <MemoryUtility.h>
+
+const BYTE EthernetBase::MAC_ADDRESS_SIZE = 6;
 
 /**
 * @brief default constructor.
@@ -138,6 +141,121 @@ void EthernetBase::IpAddress::changeVersion(VERSION version)
     this->m_address = new BYTE[this->getAddressSize()]; // allocate address array.
 }
 
+
+// ======================
+// ===  EthernetBase  ===
+// ======================
+
+
+/**
+* @brief default constructor.
+*/
+EthernetBase::EthernetBase()
+{
+    this->m_ip_address = nullptr;
+    this->m_mac_address = new BYTE[this->MAC_ADDRESS_SIZE];
+    MemoryUtility::memclear(this->m_mac_address, this->MAC_ADDRESS_SIZE);
+}
+
+/**
+* @brief destructor.
+*/
+EthernetBase::~EthernetBase()
+{
+    delete this->m_ip_address;
+    delete[] this->m_mac_address;
+}
+
+/**
+* @brief constructor of ethernet with 1 args.
+* @param[in] mac_address mac address.
+*/
+EthernetBase::EthernetBase(BYTE* mac_address) : EthernetBase()
+{
+    this->setMacAddress(mac_address);
+}
+
+/**
+* @brief constructor of ethernet with 6 args.
+* @param[in] octet1 first octet of the mac address.
+* @param[in] octet2 second octet of the mac address.
+* @param[in] octet3 third octet of the mac address.
+* @param[in] octet4 fourth octet of the mac address.
+* @param[in] octet5 fifth octet of the mac address.
+* @param[in] octet6 sixth octet of the mac address.
+*/
+EthernetBase::EthernetBase(BYTE octet1, BYTE octet2, BYTE octet3, BYTE octet4, BYTE octet5, BYTE octet6) : EthernetBase()
+{
+    this->setMacAddress(octet1, octet2, octet3, octet4, octet5, octet6);
+}
+
+/**
+* @brief return mac address.
+*/
+BYTE* EthernetBase::getMacAddress()
+{
+    return this->m_mac_address;
+}
+
+/**
+* @brief return mac address.
+* @param[out] mac_address set the mac address of this object.
+*/
+void EthernetBase::getMacAddress(BYTE* mac_address)
+{
+    if(nullptr != mac_address)
+    {
+        for(WORD i = 0; i < this->MAC_ADDRESS_SIZE; i++)
+        {
+            mac_address[i] = this->m_mac_address[i];
+        }
+    }
+}
+
+/**
+* @brief set mac address.
+* @param[in] mac_address the mac address to set.
+*/
+void EthernetBase::setMacAddress(BYTE* mac_address)
+{
+    if(nullptr != mac_address)
+    {
+        for(WORD i = 0; i < this->MAC_ADDRESS_SIZE; i++)
+        {
+            this->m_mac_address[i] = mac_address[i];
+        }
+    }
+}
+
+/**
+* @brief set mac address by args.
+* @param[in] octet1 first octet of the mac address.
+* @param[in] octet2 second octet of the mac address.
+* @param[in] octet3 third octet of the mac address.
+* @param[in] octet4 fourth octet of the mac address.
+* @param[in] octet5 fifth octet of the mac address.
+* @param[in] octet6 sixth octet of the mac address.
+*/
+void EthernetBase::setMacAddress(BYTE octet1, BYTE octet2, BYTE octet3, BYTE octet4, BYTE octet5, BYTE octet6)
+{
+    this->m_mac_address[0] = octet1;
+    this->m_mac_address[1] = octet2;
+    this->m_mac_address[2] = octet3;
+    this->m_mac_address[3] = octet4;
+    this->m_mac_address[4] = octet5;
+    this->m_mac_address[5] = octet6;
+}
+
+/**
+* @brief set ip address.
+* @param[in] ip_address IpAddress object.
+*/
+void EthernetBase::setIpAddress(EthernetBase::IpAddress* ip_address)
+{
+    delete this->m_ip_address;
+    this->m_ip_address = ip_address;
+}
+
 /**
 * @brief set ip address.
 * @param[in] octet1 first octet of the ip address.
@@ -147,13 +265,21 @@ void EthernetBase::IpAddress::changeVersion(VERSION version)
 */
 void EthernetBase::setIpAddress(BYTE octet1, BYTE octet2, BYTE octet3, BYTE octet4)
 {
+    if(nullptr == this->m_ip_address)
+    {
+        this->m_ip_address = new IpAddress(octet1, octet2, octet3, octet4);
+    }
+    else
+    {
+        this->m_ip_address->setAddress(octet1, octet2, octet3, octet4);
+    }
 }
 
 /**
 * @brief get ip address.
 * @return struct of the ip address.
 */
-const EthernetBase::IpAddress* EthernetBase::getIpAddress(void)
+EthernetBase::IpAddress* EthernetBase::getIpAddress(void)
 {
-    return &(this->m_ip_address);
+    return this->m_ip_address;
 }

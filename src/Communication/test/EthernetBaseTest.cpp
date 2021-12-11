@@ -123,93 +123,119 @@ TEST(IpAddressTest, should_be_change_ip_address_to_version4_from_version6)
 }
 
 
-// TEST_GROUP(EthernetBaseTest)
-// {
-//     EthernetBase* instance;
-//     BYTE macAddress[6] = {0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA};
-//     void setup()
-//     {
-//         instance = new EthernetBase(macAddress);
-//     }
+TEST_GROUP(EthernetBaseTest)
+{
+    EthernetBase* instance;
+    BYTE macAddress[6] = {0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA};
+    void setup()
+    {
+        instance = nullptr;
+    }
 
-//     void teardown()
-//     {
-//         delete instance;
-//     }
+    void teardown()
+    {
+        delete instance;
+    }
+};
 
-//     void createInstance(BYTE* _macAddress)
-//     {
-//         if(_macAddress == nullptr)
-//         {
-//             instance = new EthernetBase(macAddress);
-//         }
-//         else
-//         {
-//             instance = new EthernetBase(_macAddress);
-//         }
-//     }
+/**
+* create instance of EthernetBase.
+*/
+TEST(EthernetBaseTest, should_be_create_instance_with_mac_address)
+{
+    instance = new EthernetBase(macAddress);
+}
 
-//     bool isSameIpAddress(const EthernetBase::IpAddressV4* ipAddress1, const EthernetBase::IpAddressV4* ipAddress2)
-//     {
-//         bool result = false;
-//         if(ipAddress1 != nullptr && ipAddress2 != nullptr)
-//         {
-//             if( (ipAddress1->m_octet1 == ipAddress2->m_octet1) &&
-//                 (ipAddress1->m_octet2 == ipAddress2->m_octet2) &&
-//                 (ipAddress1->m_octet3 == ipAddress2->m_octet3) &&
-//                 (ipAddress1->m_octet4 == ipAddress2->m_octet4))
-//                 {
-//                     result = true;
-//                 }
-//         }
-        
-//         return result;
-//     }
+/**
+* create instance of EthernetBase by args.
+*/
+TEST(EthernetBaseTest, should_be_create_instance_with_mac_address_by_args)
+{
+    instance = new EthernetBase(macAddress[0], macAddress[1], macAddress[2], macAddress[3], macAddress[4], macAddress[5]);
+}
 
-//     bool isSameMacAddress(const BYTE* ipAddress1, const EthernetBase::IpAddressV4* ipAddress2)
-//     {
-//         bool result = false;
-//         if(ipAddress1 != nullptr && ipAddress2 != nullptr)
-//         {
-//             if( (ipAddress1->m_octet1 == ipAddress2->m_octet1) &&
-//                 (ipAddress1->m_octet2 == ipAddress2->m_octet2) &&
-//                 (ipAddress1->m_octet3 == ipAddress2->m_octet3) &&
-//                 (ipAddress1->m_octet4 == ipAddress2->m_octet4))
-//                 {
-//                     result = true;
-//                 }
-//         }
-        
-//         return result;
-//     }
-// };
+/**
+* should be set mac address by constructor.
+*/
+TEST(EthernetBaseTest, should_be_set_mac_address_by_constructor)
+{
+    instance = new EthernetBase(macAddress);
+    BYTE test_mac_address[] = {0, 0, 0, 0, 0, 0};
+    instance->getMacAddress(test_mac_address);
+    MEMCMP_EQUAL(macAddress, test_mac_address, sizeof(BYTE) * 6);
+}
 
-// // /**
-// // * create instance of EthernetBase.
-// // */
-// // TEST(EthernetBaseTest, should_be_create_instance_with_mac_address)
-// // {
-// //     instance = new EthernetBase(macAddress);
-// // }
+/**
+* should be set mac address by constructor of args.
+*/
+TEST(EthernetBaseTest, should_be_set_mac_address_by_constructor_of_args)
+{
+    instance = new EthernetBase(0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F);
+    BYTE expected_address[] = {0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
+    BYTE test_mac_address[] = {0, 0, 0, 0, 0, 0};
+    instance->getMacAddress(test_mac_address);
+    MEMCMP_EQUAL(expected_address, test_mac_address, sizeof(BYTE) * 6);
+}
 
-// /**
-// * should be set and get ip address.
-// */
-// TEST(EthernetBaseTest, should_be_set_and_get_ip_address)
-// {
-//     EthernetBase::IpAddressV4 expectedIPAddress = {192, 168, 1, 1};
-//     instance->setIpAddress(192, 168, 1, 1);
-//     CHECK(isSameIpAddress(instance->getIpAddress(), &expectedIPAddress));
-// }
+/**
+* should be get mac address.
+*/
+TEST(EthernetBaseTest, should_be_get_mac_address)
+{
+    instance = new EthernetBase(macAddress);
+    BYTE* test_mac_address = nullptr;
+    test_mac_address = instance->getMacAddress();
+    MEMCMP_EQUAL(macAddress, test_mac_address, sizeof(BYTE) * 6);
+}
 
-// /**
-// * should be set and get mac address.
-// */
-// TEST(EthernetBaseTest, should_be_set_and_get_mac_address)
-// {
-//     instance->setMacAddress(192, 168, 1, 1);
-//     CHECK(isSameIpAddress(instance->getIpAddress(), &expectedIPAddress));
-// }
+/**
+* should be set mac address by instance method.
+*/
+TEST(EthernetBaseTest, should_be_set_mac_address_by_instance_method)
+{
+    instance = new EthernetBase(0x00, 0x00, 0x00, 0x00, 0x00, 0x00);
+    BYTE expected_address[] = {0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
+    BYTE test_mac_address[] = {0, 0, 0, 0, 0, 0};
+    instance->setMacAddress(expected_address);
+    instance->getMacAddress(test_mac_address);
+    MEMCMP_EQUAL(expected_address, test_mac_address, sizeof(BYTE) * 6);
+}
+
+/**
+* should be set mac address by instance method with 6 args.
+*/
+TEST(EthernetBaseTest, should_be_set_mac_address_by_instance_method_with_6args)
+{
+    instance = new EthernetBase(0x00, 0x00, 0x00, 0x00, 0x00, 0x00);
+    BYTE expected_address[] = {0x05, 0x46, 0x19, 0x4D, 0xE7, 0xFF};
+    BYTE test_mac_address[] = {0, 0, 0, 0, 0, 0};
+    instance->setMacAddress(0x05, 0x46, 0x19, 0x4D, 0xE7, 0xFF);
+    instance->getMacAddress(test_mac_address);
+    MEMCMP_EQUAL(expected_address, test_mac_address, sizeof(BYTE) * 6);
+}
+
+/**
+* should be set and get ip address.
+*/
+TEST(EthernetBaseTest, should_be_set_and_get_ip_address)
+{
+    instance = new EthernetBase;
+    BYTE expected_address[] = {192, 168, 1, 1};
+    instance->setIpAddress(192, 168, 1, 1);
+    MEMCMP_EQUAL(expected_address, instance->getIpAddress()->getAddress(), 4);
+}
+
+/**
+* should be set and get ip address by ipaddress instance.
+*/
+TEST(EthernetBaseTest, should_be_set_and_get_ip_address_by_ipaddress_instance)
+{
+    instance = new EthernetBase;
+    EthernetBase::IpAddress* ipaddress = new EthernetBase::IpAddress(0xFF, 0xEE, 0xDD, 0xCC);
+    BYTE expected_address[] = {0xFF, 0xEE, 0xDD, 0xCC};
+    instance->setIpAddress(ipaddress);
+    MEMCMP_EQUAL(expected_address, instance->getIpAddress()->getAddress(), 4);
+}
 
 
 int main(int argc, char** argv)
