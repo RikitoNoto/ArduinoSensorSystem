@@ -8,4 +8,7 @@ typedef unsigned long DWORD;    // 4byte
 typedef enum{ FALSE = 0, TRUE = 1 } BOOL;
 typedef enum{ FAIL = FALSE, SUCCESS = TRUE } RESULT;
 
+typedef DWORD MEMORY_SIZE_T; // memory size
+typedef MEMORY_SIZE_T SIZE_T; // utilty size
+
 #endif // _DATA_TYPE_H_

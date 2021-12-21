@@ -1,6 +1,9 @@
 #include <CppUTest/CommandLineTestRunner.h>
 #include <CppUTest/TestHarness.h>
+#include "CppUTestExt/MockSupport.h"
 #include "../src/EthernetBase.h"
+
+#include "spy/Ethernet.h"
 
 TEST_GROUP(IpAddressTest)
 {
@@ -122,6 +125,29 @@ TEST(IpAddressTest, should_be_change_ip_address_to_version4_from_version6)
     CHECK(isSameIpAddress(expected_address, ipaddress.getAddress(), static_cast<BYTE>(4)));
 }
 
+/**
+* should be convert to arduino ip address class.
+*/
+TEST(IpAddressTest, should_be_convert_to_arduino_ip_address_class)
+{
+    EthernetBase::IpAddress ipaddress(0x0F, 0x0E, 0x0D, 0x0C);
+    IPAddress expected_ipaddress(0x0F, 0x0E, 0x0D, 0x0C);
+    
+    MEMCMP_EQUAL(&expected_ipaddress, ipaddress.getArduinoClass(), sizeof(IPAddress));
+}
+
+//###########
+// Ethernet test
+//###########
+
+EthernetHardwareStatus EthernetClass::return_hardware_value = EthernetHardwareStatus::EthernetW5100;
+EthernetLinkStatus EthernetClass::return_link_status = EthernetLinkStatus::LinkON;
+bool EthernetClass::isCalledBegin = false;
+bool EthernetClass::isCalledInit = false;
+uint8_t* EthernetClass::spy_mac = nullptr;
+uint8_t EthernetClass::cspin = 0;
+IPAddress EthernetClass::spy_ip = IPAddress();
+EthernetClass Ethernet;
 
 TEST_GROUP(EthernetBaseTest)
 {
@@ -130,11 +156,26 @@ TEST_GROUP(EthernetBaseTest)
     void setup()
     {
         instance = nullptr;
+        Ethernet.setUp();
     }
 
     void teardown()
     {
         delete instance;
+    }
+
+    EthernetBase* callBegin(RESULT* result = nullptr, BYTE sspin = 10)
+    {
+        RESULT _result;
+        EthernetBase* _instance = new EthernetBase(macAddress);
+        _instance->setIpAddress(0xFF, 0xFF, 0xFF, 0xFF);
+        _instance->setCsPinNo(sspin);
+        _result = _instance->begin();
+        if(nullptr != result)
+        {
+            *result = _result;
+        }
+        return _instance;
     }
 };
 
@@ -215,6 +256,25 @@ TEST(EthernetBaseTest, should_be_set_mac_address_by_instance_method_with_6args)
 }
 
 /**
+* should be set noHardWare default in cs pin.
+*/
+TEST(EthernetBaseTest, should_be_set_noHardware_default_in_cs_pin)
+{
+    instance = new EthernetBase;
+    CHECK_EQUAL(EthernetBase::HARDWARE_CSPIN::NONE_HARDWARE, instance->getCsPinNo());
+}
+
+/**
+* should be set and get cs pin.
+*/
+TEST(EthernetBaseTest, should_be_set_and_get_cs_pin)
+{
+    instance = new EthernetBase;
+    instance->setCsPinNo(EthernetBase::HARDWARE_CSPIN::ARDUINO_SHIELD);
+    CHECK_EQUAL(EthernetBase::HARDWARE_CSPIN::ARDUINO_SHIELD, instance->getCsPinNo());
+}
+
+/**
 * should be set and get ip address.
 */
 TEST(EthernetBaseTest, should_be_set_and_get_ip_address)
@@ -231,12 +291,92 @@ TEST(EthernetBaseTest, should_be_set_and_get_ip_address)
 TEST(EthernetBaseTest, should_be_set_and_get_ip_address_by_ipaddress_instance)
 {
     instance = new EthernetBase;
-    EthernetBase::IpAddress* ipaddress = new EthernetBase::IpAddress(0xFF, 0xEE, 0xDD, 0xCC);
+    EthernetBase::IpAddress ipaddress(0xFF, 0xEE, 0xDD, 0xCC);
     BYTE expected_address[] = {0xFF, 0xEE, 0xDD, 0xCC};
-    instance->setIpAddress(ipaddress);
+    instance->setIpAddress(&ipaddress);
     MEMCMP_EQUAL(expected_address, instance->getIpAddress()->getAddress(), 4);
 }
 
+/**
+* should not be call begin method with no ip address.
+*/
+TEST(EthernetBaseTest, should_not_be_call_begin_method_with_no_ip_address)
+{
+    instance = new EthernetBase;
+    instance->begin();
+    CHECK_FALSE(Ethernet.isCalledBegin);
+}
+
+/**
+* should be call begin method.
+*/
+TEST(EthernetBaseTest, should_be_call_begin_method)
+{
+    instance = callBegin();
+    CHECK(Ethernet.isCalledBegin);
+}
+
+/**
+* should be return fail when did not call begin method.
+*/
+TEST(EthernetBaseTest, should_be_return_fail_when_did_not_call_begin_method)
+{
+    RESULT result = SUCCESS;
+    instance = new EthernetBase;
+    result = instance->begin();
+    CHECK_EQUAL(FAIL, result);
+}
+
+/**
+* should be return success when call begin method.
+*/
+TEST(EthernetBaseTest, should_be_return_success_when_call_begin_method)
+{
+    RESULT result = FAIL;
+    instance = callBegin(&result);
+    CHECK_EQUAL(SUCCESS, result);
+}
+
+/**
+* should be call init method when call begin method.
+*/
+TEST(EthernetBaseTest, should_be_call_init_method_when_call_begin_method)
+{
+    instance = callBegin();
+    CHECK(Ethernet.isCalledInit);
+}
+
+/**
+* should be call init method with any number.
+*/
+TEST(EthernetBaseTest, should_be_call_init_method_with_any_number)
+{
+    instance = callBegin(nullptr, 50);
+    CHECK(Ethernet.isCalledInit);
+    CHECK_EQUAL(50, Ethernet.cspin);
+}
+
+/**
+* should be fail when no hardware.
+*/
+TEST(EthernetBaseTest, should_be_fail_when_no_hardware)
+{
+    RESULT result = SUCCESS;
+    Ethernet.return_hardware_value = EthernetNoHardware;
+    instance = callBegin(&result);
+    CHECK_EQUAL(FAIL, result);
+}
+
+/**
+* should be fail when link off.
+*/
+TEST(EthernetBaseTest, should_be_fail_when_link_off)
+{
+    RESULT result = SUCCESS;
+    Ethernet.return_link_status = EthernetLinkStatus::LinkOFF;
+    instance = callBegin(&result);
+    CHECK_EQUAL(FAIL, result);
+}
 
 int main(int argc, char** argv)
 {

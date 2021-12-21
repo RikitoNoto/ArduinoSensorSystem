@@ -5,7 +5,8 @@
 class MemoryUtility
 {
 public:
-    static BOOL memclear(void* ptr, DWORD size);
+    static RESULT memClear(void* ptr, MEMORY_SIZE_T size);
+    static RESULT memCopy(void* dst, void* src, MEMORY_SIZE_T size);
 
 };
 

@@ -1,6 +1,6 @@
 CC 				= g++
 CFLAGS 			= -Wall -g
-INCLUDE			= ../../ArduinoSensorSystemCommonInclude/src -I ../../MemoryUtility/src
+INCLUDE			= ../../ArduinoSensorSystemCommonInclude/src -I ../../MemoryUtility/src -I../test/spy
 LIBRARIES		= $$CPPUTEST_HOME/lib/libCppUTest.a
 SRCDIR 			= ../src
 OBJDIR			= temp
@@ -31,7 +31,7 @@ $(OBJDIR)/%.o:	$(MEM_UTL_DIR)/%.cpp
 	$(CC) $(CFLAGS) -c -o $@ $< -I $(INCLUDE)
 
 .PHONY: all
-all: clean $(BASE_PROGRAM)
+all: clean all_tests
 
 .PHONY: clean
 clean:

@@ -1,5 +1,6 @@
 #include "EthernetBase.h"
 #include <MemoryUtility.h>
+#include <Ethernet.h>
 
 const BYTE EthernetBase::MAC_ADDRESS_SIZE = 6;
 
@@ -10,6 +11,7 @@ EthernetBase::IpAddress::IpAddress()
 {
     this->m_version = VERSION::NONE_VERSION;
     this->m_address = nullptr;
+    this->m_arduino_ipaddress = nullptr;
 }
 
 /**
@@ -18,6 +20,7 @@ EthernetBase::IpAddress::IpAddress()
 EthernetBase::IpAddress::~IpAddress()
 {
     delete[] this->m_address;
+    this->freeArduinoClass();
 }
 
 /**
@@ -91,6 +94,8 @@ void EthernetBase::IpAddress::setAddress(BYTE octet1, BYTE octet2, BYTE octet3, 
     this->m_address[1] = octet2;
     this->m_address[2] = octet3;
     this->m_address[3] = octet4;
+    
+    this->setArduinoClass();
 }
 
 /**
@@ -114,6 +119,43 @@ void EthernetBase::IpAddress::setAddress(BYTE octet1, BYTE octet2, BYTE octet3, 
     this->m_address[3] = octet4;
     this->m_address[4] = octet5;
     this->m_address[5] = octet6;
+
+    this->setArduinoClass();
+}
+
+/**
+* @brief get the Arduino class.
+*/
+IPAddress* EthernetBase::IpAddress::getArduinoClass()
+{
+    return this->m_arduino_ipaddress;
+}
+
+/**
+* @brief set the Arduino class.
+* @note Unimplemented version 6.
+*/
+void EthernetBase::IpAddress::setArduinoClass()
+{
+    this->freeArduinoClass();
+    switch(this->m_version)
+    {
+        // ip address version 4.
+        case VERSION::VERSION4:
+            this->m_arduino_ipaddress = new IPAddress(this->m_address[0], this->m_address[1], this->m_address[2], this->m_address[3]);
+            break;
+        default:
+            break;
+    }
+}
+
+/**
+* @brief free the Arduino class.
+*/
+void EthernetBase::IpAddress::freeArduinoClass()
+{
+    delete this->m_arduino_ipaddress;
+    this->m_arduino_ipaddress = nullptr;
 }
 
 /**
@@ -153,8 +195,10 @@ void EthernetBase::IpAddress::changeVersion(VERSION version)
 EthernetBase::EthernetBase()
 {
     this->m_ip_address = nullptr;
+    this->m_is_need_ip_address_delete = FALSE;
+    this->m_cs_pin_no = HARDWARE_CSPIN::NONE_HARDWARE;
     this->m_mac_address = new BYTE[this->MAC_ADDRESS_SIZE];
-    MemoryUtility::memclear(this->m_mac_address, this->MAC_ADDRESS_SIZE);
+    MemoryUtility::memClear(this->m_mac_address, this->MAC_ADDRESS_SIZE);
 }
 
 /**
@@ -162,8 +206,32 @@ EthernetBase::EthernetBase()
 */
 EthernetBase::~EthernetBase()
 {
-    delete this->m_ip_address;
+    this->freeIpAddress();
     delete[] this->m_mac_address;
+}
+
+/**
+* @brief begin communication.
+* @param[in] sspin the pin number of cs pin.
+* @return result to begin.
+* @retval SUCCESS successful to begin.
+* @retval FAIL fail to begin.
+* @note if not set ip address and mac address, not begin communication.
+*/
+RESULT EthernetBase::begin()
+{
+    RESULT result = FAIL;
+    if(nullptr != this->m_ip_address)
+    {
+        Ethernet.init(this->m_cs_pin_no);
+        Ethernet.begin(this->m_mac_address, *(this->m_ip_address->getArduinoClass()));
+        if( (EthernetHardwareStatus::EthernetNoHardware != Ethernet.hardwareStatus()) && 
+            (EthernetLinkStatus::LinkOFF != Ethernet.linkStatus()))
+        {
+            result = SUCCESS;
+        }
+    }
+    return result;
 }
 
 /**
@@ -220,10 +288,7 @@ void EthernetBase::setMacAddress(BYTE* mac_address)
 {
     if(nullptr != mac_address)
     {
-        for(WORD i = 0; i < this->MAC_ADDRESS_SIZE; i++)
-        {
-            this->m_mac_address[i] = mac_address[i];
-        }
+        MemoryUtility::memCopy(this->m_mac_address, mac_address, this->MAC_ADDRESS_SIZE);
     }
 }
 
@@ -248,11 +313,12 @@ void EthernetBase::setMacAddress(BYTE octet1, BYTE octet2, BYTE octet3, BYTE oct
 
 /**
 * @brief set ip address.
+* @note ip_address do not clone.
 * @param[in] ip_address IpAddress object.
 */
 void EthernetBase::setIpAddress(EthernetBase::IpAddress* ip_address)
 {
-    delete this->m_ip_address;
+    this->freeIpAddress();
     this->m_ip_address = ip_address;
 }
 
@@ -268,6 +334,7 @@ void EthernetBase::setIpAddress(BYTE octet1, BYTE octet2, BYTE octet3, BYTE octe
     if(nullptr == this->m_ip_address)
     {
         this->m_ip_address = new IpAddress(octet1, octet2, octet3, octet4);
+        this->m_is_need_ip_address_delete = TRUE;
     }
     else
     {
@@ -282,4 +349,31 @@ void EthernetBase::setIpAddress(BYTE octet1, BYTE octet2, BYTE octet3, BYTE octe
 EthernetBase::IpAddress* EthernetBase::getIpAddress(void)
 {
     return this->m_ip_address;
+}
+
+
+void EthernetBase::freeIpAddress()
+{
+    if(TRUE == this->m_is_need_ip_address_delete)
+    {
+        delete this->m_ip_address;
+        this->m_ip_address = nullptr;
+        this->m_is_need_ip_address_delete = FALSE;
+    }
+}
+
+/**
+* @brief return cs pin No.
+*/
+BYTE EthernetBase::getCsPinNo()
+{
+    return this->m_cs_pin_no;
+}
+
+/**
+* @brief set cs pin No.
+*/
+void EthernetBase::setCsPinNo(BYTE cs_pin)
+{
+    this->m_cs_pin_no = cs_pin;
 }
