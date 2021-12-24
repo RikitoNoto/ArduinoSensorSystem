@@ -3,6 +3,17 @@
 #include "CppUTestExt/MockSupport.h"
 #include "../src/EthernetBase.h"
 
+class TempEthernetBase : public EthernetBase
+{
+public:
+    TempEthernetBase():EthernetBase(){};
+    TempEthernetBase(BYTE* mac_address):EthernetBase(mac_address){};
+    TempEthernetBase(BYTE octet1, BYTE octet2, BYTE octet3, BYTE octet4, BYTE octet5, BYTE octet6):EthernetBase(octet1, octet2, octet3, octet4, octet5, octet6){};
+    virtual RESULT sendData(const Message_if* data){return FAIL;};  // send data.
+    virtual RESULT receiveData(Message_if* data){return FAIL;};    // receive data.
+    RESULT end();
+};
+
 #include "spy/Ethernet.h"
 
 TEST_GROUP(IpAddressTest)
@@ -167,7 +178,7 @@ TEST_GROUP(EthernetBaseTest)
     EthernetBase* callBegin(RESULT* result = nullptr, BYTE sspin = 10)
     {
         RESULT _result;
-        EthernetBase* _instance = new EthernetBase(macAddress);
+        EthernetBase* _instance = new TempEthernetBase(macAddress);
         _instance->setIpAddress(0xFF, 0xFF, 0xFF, 0xFF);
         _instance->setCsPinNo(sspin);
         _result = _instance->begin();
@@ -184,7 +195,7 @@ TEST_GROUP(EthernetBaseTest)
 */
 TEST(EthernetBaseTest, should_be_create_instance_with_mac_address)
 {
-    instance = new EthernetBase(macAddress);
+    instance = new TempEthernetBase(macAddress);
 }
 
 /**
@@ -192,7 +203,7 @@ TEST(EthernetBaseTest, should_be_create_instance_with_mac_address)
 */
 TEST(EthernetBaseTest, should_be_create_instance_with_mac_address_by_args)
 {
-    instance = new EthernetBase(macAddress[0], macAddress[1], macAddress[2], macAddress[3], macAddress[4], macAddress[5]);
+    instance = new TempEthernetBase(macAddress[0], macAddress[1], macAddress[2], macAddress[3], macAddress[4], macAddress[5]);
 }
 
 /**
@@ -200,7 +211,7 @@ TEST(EthernetBaseTest, should_be_create_instance_with_mac_address_by_args)
 */
 TEST(EthernetBaseTest, should_be_set_mac_address_by_constructor)
 {
-    instance = new EthernetBase(macAddress);
+    instance = new TempEthernetBase(macAddress);
     BYTE test_mac_address[] = {0, 0, 0, 0, 0, 0};
     instance->getMacAddress(test_mac_address);
     MEMCMP_EQUAL(macAddress, test_mac_address, sizeof(BYTE) * 6);
@@ -211,7 +222,7 @@ TEST(EthernetBaseTest, should_be_set_mac_address_by_constructor)
 */
 TEST(EthernetBaseTest, should_be_set_mac_address_by_constructor_of_args)
 {
-    instance = new EthernetBase(0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F);
+    instance = new TempEthernetBase(0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F);
     BYTE expected_address[] = {0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
     BYTE test_mac_address[] = {0, 0, 0, 0, 0, 0};
     instance->getMacAddress(test_mac_address);
@@ -223,7 +234,7 @@ TEST(EthernetBaseTest, should_be_set_mac_address_by_constructor_of_args)
 */
 TEST(EthernetBaseTest, should_be_get_mac_address)
 {
-    instance = new EthernetBase(macAddress);
+    instance = new TempEthernetBase(macAddress);
     BYTE* test_mac_address = nullptr;
     test_mac_address = instance->getMacAddress();
     MEMCMP_EQUAL(macAddress, test_mac_address, sizeof(BYTE) * 6);
@@ -234,7 +245,7 @@ TEST(EthernetBaseTest, should_be_get_mac_address)
 */
 TEST(EthernetBaseTest, should_be_set_mac_address_by_instance_method)
 {
-    instance = new EthernetBase(0x00, 0x00, 0x00, 0x00, 0x00, 0x00);
+    instance = new TempEthernetBase(0x00, 0x00, 0x00, 0x00, 0x00, 0x00);
     BYTE expected_address[] = {0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
     BYTE test_mac_address[] = {0, 0, 0, 0, 0, 0};
     instance->setMacAddress(expected_address);
@@ -247,7 +258,7 @@ TEST(EthernetBaseTest, should_be_set_mac_address_by_instance_method)
 */
 TEST(EthernetBaseTest, should_be_set_mac_address_by_instance_method_with_6args)
 {
-    instance = new EthernetBase(0x00, 0x00, 0x00, 0x00, 0x00, 0x00);
+    instance = new TempEthernetBase(0x00, 0x00, 0x00, 0x00, 0x00, 0x00);
     BYTE expected_address[] = {0x05, 0x46, 0x19, 0x4D, 0xE7, 0xFF};
     BYTE test_mac_address[] = {0, 0, 0, 0, 0, 0};
     instance->setMacAddress(0x05, 0x46, 0x19, 0x4D, 0xE7, 0xFF);
@@ -260,7 +271,7 @@ TEST(EthernetBaseTest, should_be_set_mac_address_by_instance_method_with_6args)
 */
 TEST(EthernetBaseTest, should_be_set_noHardware_default_in_cs_pin)
 {
-    instance = new EthernetBase;
+    instance = new TempEthernetBase;
     CHECK_EQUAL(EthernetBase::HARDWARE_CSPIN::NONE_HARDWARE, instance->getCsPinNo());
 }
 
@@ -269,7 +280,7 @@ TEST(EthernetBaseTest, should_be_set_noHardware_default_in_cs_pin)
 */
 TEST(EthernetBaseTest, should_be_set_and_get_cs_pin)
 {
-    instance = new EthernetBase;
+    instance = new TempEthernetBase;
     instance->setCsPinNo(EthernetBase::HARDWARE_CSPIN::ARDUINO_SHIELD);
     CHECK_EQUAL(EthernetBase::HARDWARE_CSPIN::ARDUINO_SHIELD, instance->getCsPinNo());
 }
@@ -279,7 +290,7 @@ TEST(EthernetBaseTest, should_be_set_and_get_cs_pin)
 */
 TEST(EthernetBaseTest, should_be_set_and_get_ip_address)
 {
-    instance = new EthernetBase;
+    instance = new TempEthernetBase;
     BYTE expected_address[] = {192, 168, 1, 1};
     instance->setIpAddress(192, 168, 1, 1);
     MEMCMP_EQUAL(expected_address, instance->getIpAddress()->getAddress(), 4);
@@ -290,7 +301,7 @@ TEST(EthernetBaseTest, should_be_set_and_get_ip_address)
 */
 TEST(EthernetBaseTest, should_be_set_and_get_ip_address_by_ipaddress_instance)
 {
-    instance = new EthernetBase;
+    instance = new TempEthernetBase;
     EthernetBase::IpAddress ipaddress(0xFF, 0xEE, 0xDD, 0xCC);
     BYTE expected_address[] = {0xFF, 0xEE, 0xDD, 0xCC};
     instance->setIpAddress(&ipaddress);
@@ -302,7 +313,7 @@ TEST(EthernetBaseTest, should_be_set_and_get_ip_address_by_ipaddress_instance)
 */
 TEST(EthernetBaseTest, should_not_be_call_begin_method_with_no_ip_address)
 {
-    instance = new EthernetBase;
+    instance = new TempEthernetBase;
     instance->begin();
     CHECK_FALSE(Ethernet.isCalledBegin);
 }
@@ -322,7 +333,7 @@ TEST(EthernetBaseTest, should_be_call_begin_method)
 TEST(EthernetBaseTest, should_be_return_fail_when_did_not_call_begin_method)
 {
     RESULT result = SUCCESS;
-    instance = new EthernetBase;
+    instance = new TempEthernetBase;
     result = instance->begin();
     CHECK_EQUAL(FAIL, result);
 }

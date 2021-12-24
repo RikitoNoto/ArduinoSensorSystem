@@ -1,7 +1,7 @@
 #ifndef _ETHERNET_BASE_H_
 #define _ETHERNET_BASE_H_
 
-#include "Communicator_if.h"
+#include "InternetProtocol_if.h"
 
 class IPAddress;
 
@@ -9,7 +9,7 @@ class IPAddress;
 * @class EthernetBase
 * @brief ethernet base class.
 */
-class EthernetBase : public Communicator_if
+class EthernetBase : public InternetProtocol_if
 {
 public:
     EthernetBase();
@@ -20,14 +20,11 @@ public:
     // const of cs pin.
     enum HARDWARE_CSPIN: BYTE
     {
-        NONE_HARDWARE = 0,
+        NONE_HARDWARE = 255,
         ARDUINO_SHIELD = 10,
     };
 
     virtual RESULT begin();
-    // virtual RESULT begin(BYTE sspin); // begin communication.
-    virtual RESULT sendData(const Message_if* data, DWORD size){return FAIL;};  // send data.
-    virtual RESULT receiveData(Message_if* data, DWORD* size){return FAIL;};    // receive data.
 
     /**
     * @class IpAddress
