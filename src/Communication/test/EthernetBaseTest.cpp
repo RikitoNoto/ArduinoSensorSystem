@@ -11,7 +11,7 @@ public:
     TempEthernetBase(BYTE octet1, BYTE octet2, BYTE octet3, BYTE octet4, BYTE octet5, BYTE octet6):EthernetBase(octet1, octet2, octet3, octet4, octet5, octet6){};
     virtual RESULT sendData(const Message_if* data){return FAIL;};  // send data.
     virtual RESULT receiveData(Message_if* data){return FAIL;};    // receive data.
-    RESULT end();
+    RESULT end(){return FAIL;};
 };
 
 #include "spy/Ethernet.h"
@@ -196,6 +196,9 @@ TEST_GROUP(EthernetBaseTest)
 TEST(EthernetBaseTest, should_be_create_instance_with_mac_address)
 {
     instance = new TempEthernetBase(macAddress);
+    BYTE test_mac_address[] = {0, 0, 0, 0, 0, 0};
+    instance->getMacAddress(test_mac_address);
+    MEMCMP_EQUAL(macAddress, test_mac_address, sizeof(BYTE) * 6);
 }
 
 /**
@@ -204,6 +207,9 @@ TEST(EthernetBaseTest, should_be_create_instance_with_mac_address)
 TEST(EthernetBaseTest, should_be_create_instance_with_mac_address_by_args)
 {
     instance = new TempEthernetBase(macAddress[0], macAddress[1], macAddress[2], macAddress[3], macAddress[4], macAddress[5]);
+    BYTE test_mac_address[] = {0, 0, 0, 0, 0, 0};
+    instance->getMacAddress(test_mac_address);
+    MEMCMP_EQUAL(macAddress, test_mac_address, sizeof(BYTE) * 6);
 }
 
 /**

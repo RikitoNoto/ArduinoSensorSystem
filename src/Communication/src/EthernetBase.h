@@ -1,7 +1,7 @@
 #ifndef _ETHERNET_BASE_H_
 #define _ETHERNET_BASE_H_
 
-#include "InternetProtocol_if.h"
+#include "Communicator_if.h"
 
 class IPAddress;
 
@@ -9,7 +9,7 @@ class IPAddress;
 * @class EthernetBase
 * @brief ethernet base class.
 */
-class EthernetBase : public InternetProtocol_if
+class EthernetBase : public Communicator_if
 {
 public:
     EthernetBase();

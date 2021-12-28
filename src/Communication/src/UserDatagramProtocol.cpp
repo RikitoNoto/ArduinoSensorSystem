@@ -1,0 +1,89 @@
+#include "UserDatagramProtocol.h"
+#define     DEFAULT_PORT    (0xFFFF)
+
+/**
+* @brief default constructor.
+*/
+UserDatagramProtocol::UserDatagramProtocol(): EthernetBase()
+{
+    this->initialize();
+}
+
+/**
+* @brief constructor of ethernet with 1 args.
+* @param[in] mac_address mac address.
+*/
+UserDatagramProtocol::UserDatagramProtocol(BYTE* mac_address) :EthernetBase(mac_address)
+{
+    this->initialize();
+}
+
+/**
+* @brief constructor of ethernet with 6 args.
+* @param[in] octet1 first octet of the mac address.
+* @param[in] octet2 second octet of the mac address.
+* @param[in] octet3 third octet of the mac address.
+* @param[in] octet4 fourth octet of the mac address.
+* @param[in] octet5 fifth octet of the mac address.
+* @param[in] octet6 sixth octet of the mac address.
+*/
+UserDatagramProtocol::UserDatagramProtocol(BYTE octet1, BYTE octet2, BYTE octet3, BYTE octet4, BYTE octet5, BYTE octet6) :EthernetBase(octet1, octet2, octet3, octet4, octet5, octet6)
+{
+    this->initialize();
+}
+
+UserDatagramProtocol::~UserDatagramProtocol()
+{
+}
+
+/**
+* @brief initialize members
+*/
+void UserDatagramProtocol::initialize()
+{
+    this->m_read_port = DEFAULT_PORT;
+}
+
+/**
+* @brief begin communication.
+* @param[in] sspin the pin number of cs pin.
+* @return result to begin.
+* @retval SUCCESS successful to begin.
+* @retval FAIL fail to begin.
+* @note if not set ip address and mac address, not begin communication.
+*/
+RESULT UserDatagramProtocol::begin()
+{
+    RESULT result = FAIL;
+    
+    // call begin method.
+    if(EthernetBase::begin())
+    {
+        // if successful call begin method.
+        if(1 == this->m_ethernet_udp.begin(this->m_read_port))
+        {
+            //NOTE: if return "1", when success calling begin method.
+            //NOTE: if return "0", when fail calling begin method
+            result = SUCCESS;
+        }
+    }
+    return result;
+}
+
+/**
+* @brief get read port.
+* @return the read port .
+*/
+WORD UserDatagramProtocol::getReadPort()
+{
+    return this->m_read_port;
+}
+
+/**
+* @brief set read port.
+* @param[in] port read port.
+*/
+void UserDatagramProtocol::setReadPort(WORD port)
+{
+    this->m_read_port = port;
+}
