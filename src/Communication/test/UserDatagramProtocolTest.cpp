@@ -202,9 +202,8 @@ TEST(UserDatagramProtocolTest, should_be_call_begin_method_of_udp_when_set_read_
 */
 TEST(UserDatagramProtocolTest, should_be_call_stop_method_when_call_end_communication)
 {
-    RESULT result = FAIL;
     EthernetUDP::begin_arg_port_no = 0;
-    instance = callbeginCommunication(&result);
+    instance = callbeginCommunication();
     instance->endCommunication();
     CHECK(EthernetUDP::is_called_stop);
 }
@@ -214,11 +213,10 @@ TEST(UserDatagramProtocolTest, should_be_call_stop_method_when_call_end_communic
 */
 TEST(UserDatagramProtocolTest, should_be_call_beginPacket_method_when_call_send_data)
 {
-    RESULT result = FAIL;
     WORD address[5] = {0};
-    instance = callbeginCommunication(&result);
+    instance = callbeginCommunication();
     message = new TestMessage;
-    
+
     instance->sendData(message, address, 5);
     CHECK(EthernetUDP::is_called_beginPacket);
 }
@@ -230,9 +228,9 @@ TEST(UserDatagramProtocolTest, should_be_not_call_write_method_when_return_0_beg
 {
     RESULT result = SUCCESS;
     WORD address[5] = {0};
-    instance = callbeginCommunication(&result);
+    instance = callbeginCommunication();
     message = new TestMessage;
-    
+
     EthernetUDP::return_beginPacket = 0;
 
     result = instance->sendData(message, address, 5);
@@ -249,7 +247,7 @@ TEST(UserDatagramProtocolTest, should_be_not_call_write_method_when_return_1_beg
     WORD address[5] = {0};
     instance = callbeginCommunication();
     message = new TestMessage;
-    
+
     EthernetUDP::return_beginPacket = 1;
 
     result = instance->sendData(message, address, 5);
@@ -262,11 +260,10 @@ TEST(UserDatagramProtocolTest, should_be_not_call_write_method_when_return_1_beg
 */
 TEST(UserDatagramProtocolTest, should_be_call_endPacket_method_when_call_send_data)
 {
-    RESULT result = FAIL;
     WORD address[5] = {0};
-    instance = callbeginCommunication(&result);
+    instance = callbeginCommunication();
     message = new TestMessage;
-    
+
     instance->sendData(message, address, 5);
     CHECK(EthernetUDP::is_called_endPacket);
 }
@@ -278,9 +275,9 @@ TEST(UserDatagramProtocolTest, should_be_fail_when_endPacket_return_fail)
 {
     RESULT result = SUCCESS;
     WORD address[5] = {0};
-    instance = callbeginCommunication(&result);
+    instance = callbeginCommunication();
     message = new TestMessage;
-    
+
     EthernetUDP::return_endPacket = 0;
     result = instance->sendData(message, address, 5);
     CHECK_EQUAL(FAIL, result);
@@ -293,9 +290,9 @@ TEST(UserDatagramProtocolTest, should_be_success_when_endPacket_return_success)
 {
     RESULT result = FAIL;
     WORD address[5] = {0};
-    instance = callbeginCommunication(&result);
+    instance = callbeginCommunication();
     message = new TestMessage;
-    
+
     EthernetUDP::return_endPacket = 1;
     result = instance->sendData(message, address, 5);
     CHECK_EQUAL(SUCCESS, result);
