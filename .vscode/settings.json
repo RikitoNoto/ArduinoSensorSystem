@@ -1,6 +1,0 @@
-{
-    "C_Cpp.default.systemIncludePath": [
-        "D:\\create\\Arduino\\ArduinoSensorSystem\\src\\ArduinoSensorSystemCommonInclude\\src",
-        "D:\\create\\Arduino\\ArduinoSensorSystem\\src\\Display\\src"
-    ]
-}
