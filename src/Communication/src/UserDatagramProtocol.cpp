@@ -1,4 +1,6 @@
 #include "UserDatagramProtocol.h"
+#include "stdint.h"
+#include "stddef.h"
 #define     DEFAULT_PORT    (0xFFFF)
 #define     BEGIN_PACKET_FAIL_VALUE         (0)
 #define     BEGIN_PACKET_SUCCESS_VALUE      (1)
@@ -59,7 +61,7 @@ void UserDatagramProtocol::initialize()
 RESULT UserDatagramProtocol::beginCommunication()
 {
     RESULT result = FAIL;
-    
+
     // call begin method.
     if(EthernetBase::beginCommunication())
     {
@@ -73,8 +75,6 @@ RESULT UserDatagramProtocol::beginCommunication()
     }
     return result;
 }
-#include "stdint.h"
-#include "stddef.h"
 
 /**
 * @brief send data to address.
