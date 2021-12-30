@@ -1,5 +1,9 @@
 #include "UserDatagramProtocol.h"
 #define     DEFAULT_PORT    (0xFFFF)
+#define     BEGIN_PACKET_FAIL_VALUE         (0)
+#define     BEGIN_PACKET_SUCCESS_VALUE      (1)
+#define     END_PACKET_FAIL_VALUE           (0)
+#define     END_PACKET_SUCCESS_VALUE        (1)
 
 /**
 * @brief default constructor.
@@ -52,12 +56,12 @@ void UserDatagramProtocol::initialize()
 * @retval FAIL fail to begin.
 * @note if not set ip address and mac address, not begin communication.
 */
-RESULT UserDatagramProtocol::begin()
+RESULT UserDatagramProtocol::beginCommunication()
 {
     RESULT result = FAIL;
     
     // call begin method.
-    if(EthernetBase::begin())
+    if(EthernetBase::beginCommunication())
     {
         // if successful call begin method.
         if(1 == this->m_ethernet_udp.begin(this->m_read_port))
@@ -67,6 +71,62 @@ RESULT UserDatagramProtocol::begin()
             result = SUCCESS;
         }
     }
+    return result;
+}
+#include "stdint.h"
+#include "stddef.h"
+
+/**
+* @brief send data to address.
+* @param[in] data data to send.
+* @param[in] send_address address to send.
+* @param[in] address_size size of send address.
+* @return result to send.
+* @retval SUCCESS successful to send.
+* @retval FAIL fail to send.
+*/
+RESULT UserDatagramProtocol::sendData(Message_if* data, WORD* send_address, SIZE_T address_size)
+{
+    RESULT result = SUCCESS;
+    WORD port_number = this->getPortNumberFromAddressArray(send_address, address_size);
+    IpAddress ip_address;
+
+    //TODO: version 6 support.
+    this->getIpAddressFromAddressArray(send_address, address_size, &ip_address, EthernetBase::IpAddress::VERSION::VERSION4);
+
+    // call beginPacket method.
+    if(BEGIN_PACKET_SUCCESS_VALUE == this->m_ethernet_udp.beginPacket(*(ip_address.getArduinoClass()), port_number))
+    {
+        // call write method when beginPacket method return success value.
+        this->m_ethernet_udp.write(data->getData_uint8(), data->getDataSize_sizet_uint8());
+    }
+    else
+    {
+        // if endPacket method return fail value, result set to fail.
+        result = FAIL;
+    }
+
+    // call endPacket method.
+    if(END_PACKET_SUCCESS_VALUE != this->m_ethernet_udp.endPacket())
+    {
+        result = FAIL;
+    }
+
+    return result;
+}
+
+/**
+* @brief end communication.
+* @return result to end.
+* @retval SUCCESS successful to end.
+* @retval FAIL fail to end.
+*/
+RESULT UserDatagramProtocol::endCommunication()
+{
+    RESULT result = FAIL;
+    this->m_ethernet_udp.stop();
+
+    result = SUCCESS;
     return result;
 }
 

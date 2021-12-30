@@ -24,7 +24,7 @@ public:
         ARDUINO_SHIELD = 10,
     };
 
-    virtual RESULT begin();
+    virtual RESULT beginCommunication();
 
     /**
     * @class IpAddress
@@ -48,6 +48,7 @@ public:
 
         VERSION getVersion(void);   // get version of the ip address.
         BYTE getAddressSize(void);  // get size of the ip address.
+        static BYTE getAddressSize(VERSION address_version);  // get size of the ip address.
         BYTE* getAddress(void);     // get ip address as array of byte.
         void setAddress(BYTE octet1, BYTE octet2, BYTE octet3, BYTE octet4); // set the ip address of version4.
         void setAddress(BYTE octet1, BYTE octet2, BYTE octet3, BYTE octet4, BYTE octet5, BYTE octet6); // set the ip address of version6.
@@ -76,8 +77,13 @@ public:
     virtual BYTE getCsPinNo(void);
     virtual void setCsPinNo(BYTE cs_pin);
 
+    static const SIZE_T INDEX_PORT_NUMBER;
+    static const SIZE_T INDEX_IP_ADDRESS;
+
 protected:
-    void freeIpAddress();
+    virtual void freeIpAddress();
+    static WORD getPortNumberFromAddressArray(const WORD* address, SIZE_T address_size);
+    static RESULT getIpAddressFromAddressArray(const WORD* address, SIZE_T address_size, IpAddress* ip_address, IpAddress::VERSION ip_address_version);
 
     IpAddress* m_ip_address;
     BYTE* m_mac_address;

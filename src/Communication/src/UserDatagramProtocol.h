@@ -16,10 +16,10 @@ public:
     UserDatagramProtocol(BYTE octet1, BYTE octet2, BYTE octet3, BYTE octet4, BYTE octet5, BYTE octet6);
     virtual ~UserDatagramProtocol();
 
-    virtual RESULT begin();
-    virtual RESULT sendData(const Message_if* data){return FAIL;};
+    virtual RESULT beginCommunication();
+    virtual RESULT sendData(Message_if* data, WORD* send_address, SIZE_T address_size);
     virtual RESULT receiveData(Message_if* data){return FAIL;};
-    virtual RESULT end(){return FAIL;};
+    virtual RESULT endCommunication();
 
     virtual WORD getReadPort();
     virtual void setReadPort(WORD port);

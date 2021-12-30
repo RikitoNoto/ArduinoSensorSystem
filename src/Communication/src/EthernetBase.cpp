@@ -64,7 +64,16 @@ EthernetBase::IpAddress::VERSION EthernetBase::IpAddress::getVersion(void)
 */
 BYTE EthernetBase::IpAddress::getAddressSize(void)
 {
-    return this->m_version;
+    return this->getAddressSize(this->m_version);
+}
+
+/**
+* @brief return the size of the ip address.
+* @return address size.
+*/
+BYTE EthernetBase::IpAddress::getAddressSize(EthernetBase::IpAddress::VERSION version)
+{
+    return version;
 }
 
 /**
@@ -188,6 +197,8 @@ void EthernetBase::IpAddress::changeVersion(VERSION version)
 // ===  EthernetBase  ===
 // ======================
 
+const SIZE_T EthernetBase::INDEX_PORT_NUMBER = 0;
+const SIZE_T EthernetBase::INDEX_IP_ADDRESS  = 1;
 
 /**
 * @brief default constructor.
@@ -218,7 +229,7 @@ EthernetBase::~EthernetBase()
 * @retval FAIL fail to begin.
 * @note if not set ip address and mac address, not begin communication.
 */
-RESULT EthernetBase::begin()
+RESULT EthernetBase::beginCommunication()
 {
     RESULT result = FAIL;
     if(nullptr != this->m_ip_address)
@@ -376,4 +387,43 @@ BYTE EthernetBase::getCsPinNo()
 void EthernetBase::setCsPinNo(BYTE cs_pin)
 {
     this->m_cs_pin_no = cs_pin;
+}
+
+/**
+* @brief get port number from array argument of sendData method.
+* @param[in] address array of address.
+* @param[in] address_size size of address array.
+* @return port number
+*/
+WORD EthernetBase::getPortNumberFromAddressArray(const WORD* address, SIZE_T address_size)
+{
+    return address[EthernetBase::INDEX_PORT_NUMBER];
+}
+
+/**
+* @brief get ip address from array argument of sendData method.
+* @param[in] address array of address.
+* @param[in] address_size size of address array.
+* @param[inout] ip_address ip address instance for set ip address.
+* @param[in] ip_address_version ip address version.
+* @return result of set ip address.
+*/
+RESULT EthernetBase::getIpAddressFromAddressArray(const WORD* address, SIZE_T address_size, IpAddress* ip_address, IpAddress::VERSION ip_address_version)
+{
+    RESULT result = FAIL;
+    switch (ip_address_version)
+    {
+        case IpAddress::VERSION::VERSION4:
+            ip_address->setAddress(static_cast<BYTE>(address[EthernetBase::INDEX_IP_ADDRESS]), static_cast<BYTE>(address[EthernetBase::INDEX_IP_ADDRESS + 1]), static_cast<BYTE>(address[EthernetBase::INDEX_IP_ADDRESS + 2]), static_cast<BYTE>(address[EthernetBase::INDEX_IP_ADDRESS + 3]));
+            result = SUCCESS;
+            break;
+            
+        case IpAddress::VERSION::VERSION6:
+            break;
+
+        default:
+            break;
+    }
+    
+    return result;
 }
