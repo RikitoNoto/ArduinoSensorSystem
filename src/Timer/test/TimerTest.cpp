@@ -164,10 +164,10 @@ TEST(TimerTest, should_be_elapsed_time_return_0_after_stop_count)
     return_value_millis = 1000;
     return_value_micros = 1000;
     timer.startCount();
-    return_value_millis = 1100;
-    return_value_micros = 1100;
+    return_value_millis = 10000;
+    return_value_micros = return_value_micros / 1000;
 
-    timer.stopCount();
+    timer.clearCount();
     CHECK_EQUAL(0, timer.getElapsedTimeMillis());
     CHECK_EQUAL(0, timer.getElapsedTimeMicros());
 }
@@ -194,6 +194,81 @@ TEST(TimerTest, should_be_count_when_over_flow_micros)
     timer.startCount();
     return_value_micros = 1000;
     CHECK_EQUAL(1001, timer.getElapsedTimeMicros());
+}
+
+/**
+* should be return elapsed time when timer pause.
+*/
+TEST(TimerTest, should_be_return_elapsed_time_when_timer_pause)
+{
+    Timer timer;
+    return_value_micros = 1000;
+    return_value_millis = return_value_micros / 1000;
+    timer.startCount();
+    return_value_micros = 2000;
+    return_value_millis = return_value_micros / 1000;
+
+    timer.pauseCount();
+    CHECK_EQUAL(1, timer.getElapsedTimeMillis());
+    CHECK_EQUAL(1000, timer.getElapsedTimeMicros());
+}
+
+/**
+* should be not time up when timer pause and timer counting.
+*/
+TEST(TimerTest, should_be_not_time_up_when_timer_pause_and_timer_counting)
+{
+    Timer timer;
+    return_value_micros = 1000;
+    return_value_millis = return_value_micros / 1000;
+    timer.startCount();
+    return_value_micros = 2000;
+    return_value_millis = return_value_micros / 1000;
+
+    timer.pauseCount();
+
+    return_value_micros = 10000;
+    return_value_millis = return_value_micros / 1000;
+
+    CHECK_EQUAL(FALSE, timer.isTimeUpMillis(2));
+    CHECK_EQUAL(FALSE, timer.isTimeUpMicros(1001));
+}
+
+/**
+* should be time up when timer pause and timer time up.
+*/
+TEST(TimerTest, should_be_time_up_when_timer_pause_and_timer_time_up)
+{
+    Timer timer;
+    return_value_micros = 1000;
+    return_value_millis = return_value_micros / 1000;
+    timer.startCount();
+    return_value_micros = 2000;
+    return_value_millis = return_value_micros / 1000;
+
+    timer.pauseCount();
+
+    CHECK_EQUAL(TRUE, timer.isTimeUpMillis(1));
+    CHECK_EQUAL(TRUE, timer.isTimeUpMicros(1000));
+}
+
+/**
+* should be return elapsed time after restart timer.
+*/
+TEST(TimerTest, should_be_return_elapsed_time_after_restart_timer)
+{
+    Timer timer;
+    return_value_micros = 0;
+    return_value_millis = return_value_micros / 1000;
+    timer.startCount();
+
+    timer.pauseCount();
+    timer.startCount();
+    return_value_micros = 10000;
+    return_value_millis = return_value_micros / 1000;
+
+    CHECK_EQUAL(10000, timer.getElapsedTimeMicros());
+    CHECK_EQUAL(10, timer.getElapsedTimeMillis());
 }
 
 int main(int argc, char** argv)
