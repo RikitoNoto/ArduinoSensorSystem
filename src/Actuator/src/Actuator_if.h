@@ -12,12 +12,22 @@ public:
     typedef SDWORD ANGLE_DEG_T;
     typedef SDWORD ANGLE_RAD_T;
 
+    /**
+     * @enum current status of running.
+     * @var ERROR occur error
+     * @var COMPLETE completed operation.
+     * @var EXECUTING execute operation.
+     * @var IDLE do not execute operation.
+     */
     enum EXECUTE_STATUS : BYTE
     {
         ERROR = FAIL,
         COMPLETE = SUCCESS,
-        EXECUTING = SUCCESS+FAIL+1 // the literal is different of fail or complete.
+        EXECUTING = SUCCESS+FAIL+1, // the literal is different of fail or complete.
+        IDLE
     };
+
+    virtual EXECUTE_STATUS run(void) = 0;
 
     // virtual RESULT moveWithSpeed(SPEED speed) = 0;
     // virtual RESULT moveWithPosition(Point<POINT>* to_position) = 0;

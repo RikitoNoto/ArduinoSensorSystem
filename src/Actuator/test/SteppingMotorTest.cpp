@@ -167,6 +167,37 @@ TEST_GROUP(SteppingMotorTest)
     {
     }
 
+    void checkOutputPin_step1(void)
+    {
+        CHECK(checkPinDigitalWrite(8, HIGH));
+        CHECK(checkPinDigitalWrite(9, LOW));
+        CHECK(checkPinDigitalWrite(10, LOW));
+        CHECK(checkPinDigitalWrite(11, HIGH));
+    }
+
+    void checkOutputPin_step2(void)
+    {
+        CHECK(checkPinDigitalWrite(8, HIGH));
+        CHECK(checkPinDigitalWrite(9, HIGH));
+        CHECK(checkPinDigitalWrite(10, LOW));
+        CHECK(checkPinDigitalWrite(11, LOW));
+    }
+
+    void checkOutputPin_step3(void)
+    {
+        CHECK(checkPinDigitalWrite(8, LOW));
+        CHECK(checkPinDigitalWrite(9, HIGH));
+        CHECK(checkPinDigitalWrite(10, HIGH));
+        CHECK(checkPinDigitalWrite(11, LOW));
+    }
+
+    void checkOutputPin_step4(void)
+    {
+        CHECK(checkPinDigitalWrite(8, LOW));
+        CHECK(checkPinDigitalWrite(9, LOW));
+        CHECK(checkPinDigitalWrite(10, HIGH));
+        CHECK(checkPinDigitalWrite(11, HIGH));
+    }
 };
 
 /**
@@ -210,10 +241,7 @@ TEST(SteppingMotorTest, should_be_rotate_one_step)
 
     stepper.step();
 
-    CHECK(checkPinDigitalWrite(8, HIGH));
-    CHECK(checkPinDigitalWrite(9, LOW));
-    CHECK(checkPinDigitalWrite(10, LOW));
-    CHECK(checkPinDigitalWrite(11, HIGH));
+    checkOutputPin_step1();
 }
 
 /**
@@ -226,10 +254,7 @@ TEST(SteppingMotorTest, should_be_rotate_two_step)
     stepper.step();
     stepper.step();
 
-    CHECK(checkPinDigitalWrite(8, HIGH));
-    CHECK(checkPinDigitalWrite(9, HIGH));
-    CHECK(checkPinDigitalWrite(10, LOW));
-    CHECK(checkPinDigitalWrite(11, LOW));
+    checkOutputPin_step2();
 }
 
 /**
@@ -243,10 +268,7 @@ TEST(SteppingMotorTest, should_be_rotate_three_step)
     stepper.step();
     stepper.step();
 
-    CHECK(checkPinDigitalWrite(8, LOW));
-    CHECK(checkPinDigitalWrite(9, HIGH));
-    CHECK(checkPinDigitalWrite(10, HIGH));
-    CHECK(checkPinDigitalWrite(11, LOW));
+    checkOutputPin_step3();
 }
 
 /**
@@ -261,10 +283,7 @@ TEST(SteppingMotorTest, should_be_rotate_four_step)
     stepper.step();
     stepper.step();
 
-    CHECK(checkPinDigitalWrite(8, LOW));
-    CHECK(checkPinDigitalWrite(9, LOW));
-    CHECK(checkPinDigitalWrite(10, HIGH));
-    CHECK(checkPinDigitalWrite(11, HIGH));
+    checkOutputPin_step4();
 }
 
 /**
@@ -280,10 +299,7 @@ TEST(SteppingMotorTest, should_be_rotate_five_step)
     stepper.step();
     stepper.step();
 
-    CHECK(checkPinDigitalWrite(8, HIGH));
-    CHECK(checkPinDigitalWrite(9, LOW));
-    CHECK(checkPinDigitalWrite(10, LOW));
-    CHECK(checkPinDigitalWrite(11, HIGH));
+    checkOutputPin_step1();
 }
 
 /**
@@ -298,10 +314,7 @@ TEST(SteppingMotorTest, should_be_rotate_thirty_step)
         stepper.step();
     }
 
-    CHECK(checkPinDigitalWrite(8, HIGH));
-    CHECK(checkPinDigitalWrite(9, HIGH));
-    CHECK(checkPinDigitalWrite(10, LOW));
-    CHECK(checkPinDigitalWrite(11, LOW));
+    checkOutputPin_step2();
 }
 
 /**
@@ -312,11 +325,7 @@ TEST(SteppingMotorTest, should_be_rotate_revers_one_step)
     SteppingMotorSpy stepper(8, 9, 10, 11);
     stepper.reversStep();
 
-
-    CHECK(checkPinDigitalWrite(8, HIGH));
-    CHECK(checkPinDigitalWrite(9, LOW));
-    CHECK(checkPinDigitalWrite(10, LOW));
-    CHECK(checkPinDigitalWrite(11, HIGH));
+    checkOutputPin_step1();
 }
 
 /**
@@ -328,11 +337,7 @@ TEST(SteppingMotorTest, should_be_rotate_revers_two_step)
     stepper.reversStep();
     stepper.reversStep();
 
-
-    CHECK(checkPinDigitalWrite(8, LOW));
-    CHECK(checkPinDigitalWrite(9, LOW));
-    CHECK(checkPinDigitalWrite(10, HIGH));
-    CHECK(checkPinDigitalWrite(11, HIGH));
+    checkOutputPin_step4();
 }
 
 /**
@@ -345,10 +350,7 @@ TEST(SteppingMotorTest, should_be_rotate_revers_three_step)
     stepper.reversStep();
     stepper.reversStep();
 
-    CHECK(checkPinDigitalWrite(8, LOW));
-    CHECK(checkPinDigitalWrite(9, HIGH));
-    CHECK(checkPinDigitalWrite(10, HIGH));
-    CHECK(checkPinDigitalWrite(11, LOW));
+    checkOutputPin_step3();
 }
 
 /**
@@ -362,23 +364,161 @@ TEST(SteppingMotorTest, should_be_rotate_revers_forth_step)
     stepper.reversStep();
     stepper.reversStep();
 
+    checkOutputPin_step2();
+}
+
+/**
+* should be rotate with angle.
+*/
+TEST(SteppingMotorTest, should_be_rotate_with_angle)
+{
+    SteppingMotorSpy stepper(8, 9, 10, 11);
+
+    stepper.setStepAngle_mdeg(10);
+    stepper.moveWithAngle_mdeg(100);
+
+    for(int i=1; i<11 ; i++)
+    {
+        stepper.run();
+        switch (i%4)
+        {
+            case 1: // step 1
+                checkOutputPin_step1();
+                break;
+
+            case 2: // step 2
+                checkOutputPin_step2();
+                break;
+
+            case 3: // step 3
+                checkOutputPin_step3();
+                break;
+
+            case 0: // step 4
+                checkOutputPin_step4();
+                break;
+
+            default:
+                // fail.
+                CHECK(FALSE);
+                break;
+        }
+    }
+
+    stepper.run();
+
+    // should be stop in step 2.
+    //FIXME: why fail when call check method and comment out CHECK methods.
+    //checkOutputPin_step2();
     CHECK(checkPinDigitalWrite(8, HIGH));
     CHECK(checkPinDigitalWrite(9, HIGH));
     CHECK(checkPinDigitalWrite(10, LOW));
     CHECK(checkPinDigitalWrite(11, LOW));
+
 }
 
-// /**
-// * should be rotate with angle.
-// */
-// TEST(SteppingMotorTest, should_be_rotate_with_angle)
-// {
-//     SteppingMotorSpy stepper(8, 9, 10, 11);
+/**
+* should be not rotate with 0 angle.
+*/
+TEST(SteppingMotorTest, should_be_not_rotate_with_0_angle)
+{
+    SteppingMotorSpy stepper(8, 9, 10, 11);
 
-//     stepper.setStepAngle_mdeg(10);
+    stepper.setStepAngle_mdeg(10);
+    stepper.moveWithAngle_mdeg(0);
 
+    stepper.run();
+    CHECK(checkPinDigitalWrite(8, LOW));
+    CHECK(checkPinDigitalWrite(9, LOW));
+    CHECK(checkPinDigitalWrite(10, LOW));
+    CHECK(checkPinDigitalWrite(11, LOW));
+}
 
-// }
+/**
+* should be return status idle when be not running.
+*/
+TEST(SteppingMotorTest, should_be_return_status_idle_when_be_not_running)
+{
+    SteppingMotorSpy stepper(8, 9, 10, 11);
+
+    stepper.setStepAngle_mdeg(10);
+
+    CHECK_EQUAL(SteppingMotor::EXECUTE_STATUS::IDLE, stepper.run());
+}
+
+/**
+* should be return status execute when running.
+*/
+TEST(SteppingMotorTest, should_be_return_status_execute_when_running)
+{
+    SteppingMotorSpy stepper(8, 9, 10, 11);
+
+    stepper.setStepAngle_mdeg(10);
+    stepper.moveWithAngle_mdeg(100);
+
+    for(int i=1; i<11 ; i++)
+    {
+        CHECK_EQUAL(SteppingMotor::EXECUTE_STATUS::EXECUTING, stepper.run());
+    }
+}
+
+/**
+* should be return status complete when complete.
+*/
+TEST(SteppingMotorTest, should_be_return_status_complete_when_complete)
+{
+    SteppingMotorSpy stepper(8, 9, 10, 11);
+
+    stepper.setStepAngle_mdeg(10);
+    stepper.moveWithAngle_mdeg(100);
+
+    for(int i=1; i<11 ; i++)
+    {
+        stepper.run();
+    }
+
+    CHECK_EQUAL(SteppingMotor::EXECUTE_STATUS::COMPLETE, stepper.run());
+}
+
+/**
+* should be return status idle when return complete.
+*/
+TEST(SteppingMotorTest, should_be_return_status_idle_when_return_complete)
+{
+    SteppingMotorSpy stepper(8, 9, 10, 11);
+
+    stepper.setStepAngle_mdeg(10);
+    stepper.moveWithAngle_mdeg(100);
+
+    for(int i=1; i<11 ; i++)
+    {
+        stepper.run();
+    }
+
+    stepper.run();
+    CHECK_EQUAL(SteppingMotor::EXECUTE_STATUS::IDLE, stepper.run());
+}
+
+/**
+* should be not running after complete.
+*/
+TEST(SteppingMotorTest, should_be_not_running_after_complete)
+{
+    SteppingMotorSpy stepper(8, 9, 10, 11);
+
+    stepper.setStepAngle_mdeg(10);
+    stepper.moveWithAngle_mdeg(100);
+
+    for(int i=1; i<11 ; i++)
+    {
+        stepper.run();
+    }
+
+    stepper.run();
+    stepper.moveWithAngle_mdeg(10);
+    CHECK_EQUAL(SteppingMotor::EXECUTE_STATUS::EXECUTING, stepper.run());
+    checkOutputPin_step3();
+}
 
 int main(int argc, char** argv)
 {
