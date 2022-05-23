@@ -27,15 +27,23 @@ public:
 class Scheduler
 {
 public:
+    typedef QWORD count_t;
+    typedef WORD sid_t;
     static Scheduler* getInstance(void);
     static void deleteInstance(void);
 
-    void setSchedule(Schedule_if* schedule);
+    sid_t setSchedule(Schedule_if* schedule);
+
+    void start(sid_t id);
+
+    #define SCHEDULER_FUNC_MAX_COUNT    0x0F
+    #define SCHEDULER_INVALID_ID        0xFF
+
 private:
     Scheduler();
     virtual ~Scheduler();
 
-    static Scheduler* instance;
+    static Scheduler* p_instance;
 
 
     #ifdef _DEBUG_
@@ -43,6 +51,17 @@ private:
     #else
         #define _COUNT_FUNC_ACCESS_MODIFIER private
     #endif
-    _COUNT_FUNC_ACCESS_MODIFIER : void countTime(void);
+    _COUNT_FUNC_ACCESS_MODIFIER : void count1ms(void);
+
+private:
+
+    struct ScheduleInfo_s
+    {
+        BOOL m_is_started;
+        count_t m_count;
+        Schedule_if* mp_schedule;
+    };
+    ScheduleInfo_s m_schedule_infos[SCHEDULER_FUNC_MAX_COUNT];
+
 };
 #endif // _SCHEDULER_H_
