@@ -1,7 +1,44 @@
 #include <CppUTest/CommandLineTestRunner.h>
 #include <CppUTest/TestHarness.h>
 #include "../src/Scheduler.h"
+#include "spy/MsTimer2.h"
 
+extern void count1ms(void);
+
+
+// =====MsTimer2 spy=====
+bool MsTimer2::is_started = false;
+unsigned long MsTimer2::set_time = 0;
+void (*MsTimer2::set_f)() = nullptr;
+
+void MsTimer2::set(unsigned long ms, void (*f)())
+{
+    MsTimer2::set_time = ms;
+    MsTimer2::set_f = f;
+}
+void MsTimer2::start()
+{
+    MsTimer2::is_started = true;
+}
+void MsTimer2::stop()
+{
+    MsTimer2::is_started = false;
+}
+
+void MsTimer2::_overflow()
+{
+
+}
+
+void MsTimer2::setUp(void)
+{
+    MsTimer2::is_started = false;
+    MsTimer2::set_time = 0;
+    MsTimer2::set_f = nullptr;
+}
+// ======================
+
+// =====test methods=====
 TEST_GROUP(SchedulerTest)
 {
     class ScheduleSpy : public Schedule_if
@@ -41,12 +78,28 @@ TEST_GROUP(SchedulerTest)
 
     void setup()
     {
+        MsTimer2::setUp();
     }
 
     void teardown()
     {
         Scheduler::deleteInstance();
         delete schedule;
+    }
+
+    void checkIsCalledExecute(Scheduler::count_t passed_time, Scheduler::count_t set_time, ScheduleSpy* schedule)
+    {
+        // if it is same the passed time and set_time,
+        // or set_time is zero.
+        if( (set_time == 0) || ((passed_time%set_time) == 0) )
+        {
+            CHECK(schedule->is_called_execute);
+            schedule->is_called_execute = false;
+        }
+        else
+        {
+            CHECK_FALSE(schedule->is_called_execute);
+        }
     }
 
     /**
@@ -62,19 +115,38 @@ TEST_GROUP(SchedulerTest)
         // check to call func each 1ms.
         for(Scheduler::count_t passed_time=1; passed_time<=check_time ; passed_time++)
         {
-            Scheduler::getInstance()->count1ms();
-            // if it is same the passed time and ms.
-            if( (passed_time%ms) == 0)
-            {
-                CHECK(schedule->is_called_execute);
-                schedule->is_called_execute = false;
-            }
-            else
-            {
-                CHECK_FALSE(schedule->is_called_execute);
-            }
+            count1ms();
+            checkIsCalledExecute(passed_time, ms, schedule);
+        }
+    }
+
+    /**
+    * check to call the func after the ms,
+    * and check to be not call the func before the ms.
+    * this function check tow func together.
+    */
+    void checkCalledTwoFuncWithTime(Scheduler::count_t ms1, Scheduler::count_t ms2, Scheduler::count_t check_time)
+    {
+        ScheduleSpy* schedule1 = new ScheduleSpy(ms1);
+        Scheduler::sid_t id1 = Scheduler::getInstance()->setSchedule(schedule1);
+
+        ScheduleSpy* schedule2 = new ScheduleSpy(ms2);
+        Scheduler::sid_t id2 = Scheduler::getInstance()->setSchedule(schedule2);
+
+        Scheduler::getInstance()->start(id1);
+        Scheduler::getInstance()->start(id2);
+
+        // check to call func each 1ms.
+        for(Scheduler::count_t passed_time=1; passed_time<=check_time ; passed_time++)
+        {
+            count1ms();
+
+            checkIsCalledExecute(passed_time, ms1, schedule1);
+            checkIsCalledExecute(passed_time, ms2, schedule2);
 
         }
+        delete schedule1;
+        delete schedule2;
     }
 };
 
@@ -92,7 +164,7 @@ TEST(SchedulerTest, shoule_be_able_to_set_schedule)
 */
 TEST(SchedulerTest, shoule_be_call_immediately_the_func_with_0ms)
 {
-    checkCalledFuncWithTime(0, 0);
+    checkCalledFuncWithTime(0, 1);
 }
 
 /**
@@ -116,22 +188,7 @@ TEST(SchedulerTest, shoule_be_call_the_func_after_10ms_and_20ms)
 */
 TEST(SchedulerTest, shoule_be_call_the_two_funcs_with_0ms)
 {
-    ScheduleSpy* schedule1 = new ScheduleSpy(0);
-    Scheduler::sid_t id1 = Scheduler::getInstance()->setSchedule(schedule1);
-
-
-    ScheduleSpy* schedule2 = new ScheduleSpy(0);
-    Scheduler::sid_t id2 = Scheduler::getInstance()->setSchedule(schedule2);
-
-    Scheduler::getInstance()->start(id1);
-    Scheduler::getInstance()->start(id2);
-
-    Scheduler::getInstance()->count1ms();
-    CHECK(schedule1->is_called_execute);
-    CHECK(schedule2->is_called_execute);
-
-    delete schedule1;
-    delete schedule2;
+    checkCalledTwoFuncWithTime(0, 0, 1);
 }
 
 /**
@@ -139,42 +196,7 @@ TEST(SchedulerTest, shoule_be_call_the_two_funcs_with_0ms)
 */
 TEST(SchedulerTest, shoule_be_call_the_two_func_after_5ms_and_3ms)
 {
-    ScheduleSpy* schedule1 = new ScheduleSpy(5);
-    Scheduler::sid_t id1 = Scheduler::getInstance()->setSchedule(schedule1);
-
-    ScheduleSpy* schedule2 = new ScheduleSpy(3);
-    Scheduler::sid_t id2 = Scheduler::getInstance()->setSchedule(schedule2);
-
-    Scheduler::getInstance()->start(id1);
-    Scheduler::getInstance()->start(id2);
-
-    Scheduler::getInstance()->count1ms();
-    CHECK_FALSE(schedule1->is_called_execute);
-    CHECK_FALSE(schedule2->is_called_execute);
-    schedule1->is_called_execute = false;
-    schedule2->is_called_execute = false;
-    Scheduler::getInstance()->count1ms();
-    CHECK_FALSE(schedule1->is_called_execute);
-    CHECK_FALSE(schedule2->is_called_execute);
-    schedule1->is_called_execute = false;
-    schedule2->is_called_execute = false;
-    Scheduler::getInstance()->count1ms();
-    CHECK_FALSE(schedule1->is_called_execute);
-    CHECK(schedule2->is_called_execute);
-    schedule1->is_called_execute = false;
-    schedule2->is_called_execute = false;
-    Scheduler::getInstance()->count1ms();
-    CHECK_FALSE(schedule1->is_called_execute);
-    CHECK_FALSE(schedule2->is_called_execute);
-    schedule1->is_called_execute = false;
-    schedule2->is_called_execute = false;
-    Scheduler::getInstance()->count1ms();
-    CHECK(schedule1->is_called_execute);
-    CHECK_FALSE(schedule2->is_called_execute);
-    schedule1->is_called_execute = false;
-    schedule2->is_called_execute = false;
-    delete schedule1;
-    delete schedule2;
+    checkCalledTwoFuncWithTime(5, 3, 5);
 }
 
 /**
@@ -191,7 +213,7 @@ TEST(SchedulerTest, shoule_be_not_call_the_func_that_do_not_start)
 
     Scheduler::getInstance()->start(id1);
 
-    Scheduler::getInstance()->count1ms();
+    count1ms();
     CHECK(schedule1->is_called_execute);
     CHECK_FALSE(schedule2->is_called_execute);
 
@@ -204,8 +226,11 @@ TEST(SchedulerTest, shoule_be_not_call_the_func_that_do_not_start)
 */
 TEST(SchedulerTest, shoule_be_use_the_MSTimer2)
 {
-    // ScheduleSpy* schedule2 = new ScheduleSpy(3);
-    // Scheduler::getInstance()->setSchedule(schedule2);
+    schedule = new ScheduleSpy(3);
+    Scheduler::getInstance()->start(Scheduler::getInstance()->setSchedule(schedule));
+    CHECK_EQUAL(1, MsTimer2::set_time);     // should be set 1ms.(not 3ms)
+    FUNCTIONPOINTERS_EQUAL(count1ms, MsTimer2::set_f); // should be set the count function.
+    CHECK(MsTimer2::is_started);            // should started MsTimer2.
 }
 
 int main(int argc, char** argv)

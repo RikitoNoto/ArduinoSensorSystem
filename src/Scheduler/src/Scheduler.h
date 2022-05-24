@@ -39,21 +39,13 @@ public:
     #define SCHEDULER_FUNC_MAX_COUNT    0x0F
     #define SCHEDULER_INVALID_ID        0xFF
 
+    void ISR1ms(void);
+
 private:
     Scheduler();
     virtual ~Scheduler();
 
     static Scheduler* p_instance;
-
-
-    #ifdef _DEBUG_
-        #define _COUNT_FUNC_ACCESS_MODIFIER public
-    #else
-        #define _COUNT_FUNC_ACCESS_MODIFIER private
-    #endif
-    _COUNT_FUNC_ACCESS_MODIFIER : void count1ms(void);
-
-private:
 
     struct ScheduleInfo_s
     {
@@ -63,5 +55,6 @@ private:
     };
     ScheduleInfo_s m_schedule_infos[SCHEDULER_FUNC_MAX_COUNT];
 
+    BOOL is_timer_started;
 };
 #endif // _SCHEDULER_H_

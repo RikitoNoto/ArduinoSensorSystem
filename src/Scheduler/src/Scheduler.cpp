@@ -3,6 +3,18 @@
 
 Scheduler* Scheduler::p_instance = nullptr;
 
+#define ISR_INTERVAL    (1) // the interval of call ISR method.
+
+#ifdef _DEBUG_
+    #define _COUNT_FUNC_ACCESS_MODIFIER
+#else
+    #define _COUNT_FUNC_ACCESS_MODIFIER static
+#endif
+_COUNT_FUNC_ACCESS_MODIFIER void count1ms(void)
+{
+    Scheduler::getInstance()->ISR1ms();
+}
+
 Scheduler::Scheduler()
 {
     for(WORD i=0; i<SCHEDULER_FUNC_MAX_COUNT ; i++)
@@ -11,6 +23,7 @@ Scheduler::Scheduler()
         this->m_schedule_infos[i].m_count = 0;
         this->m_schedule_infos[i].m_is_started = FALSE;
     }
+    this->is_timer_started = FALSE;
 }
 
 Scheduler::~Scheduler()
@@ -51,9 +64,16 @@ Scheduler::sid_t Scheduler::setSchedule(Schedule_if* schedule)
 void Scheduler::start(Scheduler::sid_t id)
 {
     this->m_schedule_infos[id].m_is_started = TRUE;
+
+    // if did not start MsTimer2.
+    if(this->is_timer_started == FALSE)
+    {
+        MsTimer2::set(ISR_INTERVAL, count1ms);  // set the count function.
+        MsTimer2::start();                      // timer start.
+    }
 }
 
-void Scheduler::count1ms()
+void Scheduler::ISR1ms()
 {
     for(WORD i=0; i < SCHEDULER_FUNC_MAX_COUNT; i++)
     {

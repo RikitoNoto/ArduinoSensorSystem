@@ -3,31 +3,16 @@
 
 namespace MsTimer2 {
 
-    bool is_started = false;
-    unsigned long set_time = 0;
-    void (*set_f)() = nullptr;
+    extern bool is_started;
+    extern unsigned long set_time;
+    extern void (*set_f)();
 
-	void set(unsigned long ms, void (*f)())
-    {
-        set_time = ms;
-        set_f = f;
-    }
-	void start()
-    {
-        is_started = true;
-    }
-	void stop()
-    {
-        is_started = false;
-    }
+	void set(unsigned long ms, void (*f)());
+	void start();
+	void stop();
 	void _overflow();
 
-    void setUp(void)
-    {
-        is_started = false;
-        set_time = 0;
-        set_f = nullptr;
-    }
+    void setUp(void);
 }
 
 
