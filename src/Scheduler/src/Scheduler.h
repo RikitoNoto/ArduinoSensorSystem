@@ -49,8 +49,8 @@ private:
 
     struct ScheduleInfo_s
     {
-        BOOL m_is_started;
-        count_t m_count;
+        volatile BOOL m_is_started;
+        volatile count_t m_count;
         Schedule_if* mp_schedule;
     };
     ScheduleInfo_s m_schedule_infos[SCHEDULER_FUNC_MAX_COUNT];
