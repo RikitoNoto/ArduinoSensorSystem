@@ -79,17 +79,24 @@ void Scheduler::ISR1ms()
     {
         if(this->m_schedule_infos[i].mp_schedule != nullptr)
         {
+            // volatile members guaranteed load from memory(even if you don't need it),
+            // so it load to local variable in advance.
+            BOOL is_started = this->m_schedule_infos[i].m_is_started;
+            count_t count = this->m_schedule_infos[i].m_count;
+
             // if started.
-            if(this->m_schedule_infos[i].m_is_started == TRUE)
+            if(is_started == TRUE)
             {
-                this->m_schedule_infos[i].m_count++;    // add 1ms to count.
+                count++;    // add 1ms to count.
                 // if count is over set time.
-                if(this->m_schedule_infos[i].m_count >= this->m_schedule_infos[i].mp_schedule->getTime())
+                if(count >= this->m_schedule_infos[i].mp_schedule->getTime())
                 {
                     this->m_schedule_infos[i].mp_schedule->execute();   // execute method.
-                    this->m_schedule_infos[i].m_count = 0;              // reset count.
+                    count = 0;              // reset count.
                 }
             }
+
+            this->m_schedule_infos[i].m_count = count;
         }
     }
 
