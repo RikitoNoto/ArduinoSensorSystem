@@ -49,11 +49,13 @@ private:
 
     struct ScheduleInfo_s
     {
-        volatile BOOL m_is_started;
+        BOOL m_is_started;
         volatile count_t m_count;
         Schedule_if* mp_schedule;
     };
     ScheduleInfo_s m_schedule_infos[SCHEDULER_FUNC_MAX_COUNT];
+
+    void clearScheduleInfo(ScheduleInfo_s* info);
 
     BOOL is_timer_started;
 };
