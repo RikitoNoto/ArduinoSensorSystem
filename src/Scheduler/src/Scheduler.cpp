@@ -19,9 +19,7 @@ Scheduler::Scheduler()
 {
     for(WORD i=0; i<SCHEDULER_FUNC_MAX_COUNT ; i++)
     {
-        this->m_schedule_infos[i].mp_schedule = nullptr;
-        this->m_schedule_infos[i].m_count = 0;
-        this->m_schedule_infos[i].m_is_started = FALSE;
+        this->clearScheduleInfo(&(this->m_schedule_infos[i]));
     }
     this->is_timer_started = FALSE;
 }
@@ -81,23 +79,47 @@ void Scheduler::ISR1ms()
         {
             // volatile members guaranteed load from memory(even if you don't need it),
             // so it load to local variable in advance.
-            BOOL is_started = this->m_schedule_infos[i].m_is_started;
             count_t count = this->m_schedule_infos[i].m_count;
 
             // if started.
-            if(is_started == TRUE)
+            if(this->m_schedule_infos[i].m_is_started == TRUE)
             {
                 count++;    // add 1ms to count.
                 // if count is over set time.
                 if(count >= this->m_schedule_infos[i].mp_schedule->getTime())
                 {
                     this->m_schedule_infos[i].mp_schedule->execute();   // execute method.
-                    count = 0;              // reset count.
+
+                    switch(this->m_schedule_infos[i].mp_schedule->getScheduleType())
+                    {
+                        case Schedule_if::INTERVAL:
+                            count = 0;              // reset count.
+                            break;
+                        case Schedule_if::AFTER_ONCE:
+                            this->clearScheduleInfo(&(this->m_schedule_infos[i]));
+                            break;
+                        default:
+                            break;
+                    }
                 }
             }
 
-            this->m_schedule_infos[i].m_count = count;
+            if(this->m_schedule_infos[i].mp_schedule != nullptr)
+            {
+                this->m_schedule_infos[i].m_count = count;
+            }
+
         }
     }
 
+}
+
+void Scheduler::clearScheduleInfo(ScheduleInfo_s* info)
+{
+    if(info != nullptr)
+    {
+        info->mp_schedule = nullptr;
+        info->m_count = 0;
+        info->m_is_started = FALSE;
+    }
 }

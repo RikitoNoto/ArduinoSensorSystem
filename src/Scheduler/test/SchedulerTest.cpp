@@ -48,6 +48,7 @@ TEST_GROUP(SchedulerTest)
         {
             this->m_ms = ms;
             this->is_called_execute = false;
+            this->m_type = SchduleType::INTERVAL;
         }
 
         virtual ~ScheduleSpy()
@@ -67,14 +68,14 @@ TEST_GROUP(SchedulerTest)
 
         SchduleType getScheduleType(void)
         {
-            return SchduleType::INTERVAL;
+            return this->m_type;
         }
 
         bool is_called_execute;
         DWORD m_ms;
+        SchduleType m_type;
     };
 
-    ScheduleSpy* schedule = nullptr;
 
     void setup()
     {
@@ -84,7 +85,6 @@ TEST_GROUP(SchedulerTest)
     void teardown()
     {
         Scheduler::deleteInstance();
-        delete schedule;
     }
 
     void checkIsCalledExecute(Scheduler::count_t passed_time, Scheduler::count_t set_time, ScheduleSpy* schedule)
@@ -108,7 +108,7 @@ TEST_GROUP(SchedulerTest)
     */
     void checkCalledFuncWithTime(Scheduler::count_t ms, Scheduler::count_t check_time)
     {
-        schedule = new ScheduleSpy(ms);
+        ScheduleSpy* schedule = new ScheduleSpy(ms);
         Scheduler::sid_t id = Scheduler::getInstance()->setSchedule(schedule);
         Scheduler::getInstance()->start(id);
 
@@ -118,6 +118,7 @@ TEST_GROUP(SchedulerTest)
             count1ms();
             checkIsCalledExecute(passed_time, ms, schedule);
         }
+        delete schedule;
     }
 
     /**
@@ -155,8 +156,9 @@ TEST_GROUP(SchedulerTest)
 */
 TEST(SchedulerTest, shoule_be_able_to_set_schedule)
 {
-    schedule = new ScheduleSpy();
+    ScheduleSpy* schedule = new ScheduleSpy();
     Scheduler::getInstance()->setSchedule(schedule);
+    delete schedule;
 }
 
 /**
@@ -226,11 +228,39 @@ TEST(SchedulerTest, shoule_be_not_call_the_func_that_do_not_start)
 */
 TEST(SchedulerTest, shoule_be_use_the_MSTimer2)
 {
-    schedule = new ScheduleSpy(3);
+    ScheduleSpy* schedule = new ScheduleSpy(3);
     Scheduler::getInstance()->start(Scheduler::getInstance()->setSchedule(schedule));
     CHECK_EQUAL(1, MsTimer2::set_time);     // should be set 1ms.(not 3ms)
     FUNCTIONPOINTERS_EQUAL(count1ms, MsTimer2::set_f); // should be set the count function.
     CHECK(MsTimer2::is_started);            // should started MsTimer2.
+    delete schedule;
+}
+
+/**
+* shoule be call once when set AFTER_ONCE.
+*/
+TEST(SchedulerTest, shoule_be_call_once_when_set_AFTER_ONCE)
+{
+    ScheduleSpy* schedule = new ScheduleSpy(2);
+    schedule->m_type = Schedule_if::SchduleType::AFTER_ONCE;
+    Scheduler::sid_t id = Scheduler::getInstance()->setSchedule(schedule);
+    Scheduler::getInstance()->start(id);
+
+    // check to call func each 1ms.
+    for(Scheduler::count_t passed_time=1; passed_time<=5 ; passed_time++)
+    {
+        count1ms();
+        if(passed_time == 2)
+        {
+            CHECK(schedule->is_called_execute);
+            schedule->is_called_execute = false;
+        }
+        else
+        {
+            CHECK_FALSE(schedule->is_called_execute);
+        }
+    }
+    delete schedule;
 }
 
 int main(int argc, char** argv)
