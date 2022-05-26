@@ -71,6 +71,16 @@ void Scheduler::start(Scheduler::sid_t id)
     }
 }
 
+void Scheduler::cancel(sid_t id)
+{
+    this->m_schedule_infos[id].m_is_started = FALSE;
+}
+
+void Scheduler::clear(sid_t id)
+{
+    this->clearScheduleInfo(&(this->m_schedule_infos[id]));
+}
+
 void Scheduler::ISR1ms()
 {
     for(WORD i=0; i < SCHEDULER_FUNC_MAX_COUNT; i++)
@@ -80,9 +90,10 @@ void Scheduler::ISR1ms()
             // volatile members guaranteed load from memory(even if you don't need it),
             // so it load to local variable in advance.
             count_t count = this->m_schedule_infos[i].m_count;
+            BOOL is_started = this->m_schedule_infos[i].m_is_started;
 
             // if started.
-            if(this->m_schedule_infos[i].m_is_started == TRUE)
+            if(is_started == TRUE)
             {
                 count++;    // add 1ms to count.
                 // if count is over set time.
@@ -96,7 +107,7 @@ void Scheduler::ISR1ms()
                             count = 0;              // reset count.
                             break;
                         case Schedule_if::AFTER_ONCE:
-                            this->clearScheduleInfo(&(this->m_schedule_infos[i]));
+                            is_started = FALSE;
                             break;
                         default:
                             break;
@@ -104,10 +115,8 @@ void Scheduler::ISR1ms()
                 }
             }
 
-            if(this->m_schedule_infos[i].mp_schedule != nullptr)
-            {
-                this->m_schedule_infos[i].m_count = count;
-            }
+            this->m_schedule_infos[i].m_count = count;
+            this->m_schedule_infos[i].m_is_started = is_started;
 
         }
     }
