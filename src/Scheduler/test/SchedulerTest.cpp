@@ -263,6 +263,48 @@ TEST(SchedulerTest, shoule_be_call_once_when_set_AFTER_ONCE)
     delete schedule;
 }
 
+/**
+* should not execute when cancel schedule.
+*/
+TEST(SchedulerTest, shoule_not_execute_when_cancel_schedule)
+{
+    ScheduleSpy* schedule1 = new ScheduleSpy(0);
+    Scheduler::sid_t id1 = Scheduler::getInstance()->setSchedule(schedule1);
+
+
+    ScheduleSpy* schedule2 = new ScheduleSpy(0);
+    Scheduler::sid_t id2 = Scheduler::getInstance()->setSchedule(schedule2);
+
+    Scheduler::getInstance()->start(id1);
+    Scheduler::getInstance()->start(id2);
+
+    Scheduler::getInstance()->cancel(id2);
+
+    count1ms();
+    CHECK(schedule1->is_called_execute);
+    CHECK_FALSE(schedule2->is_called_execute);
+
+    delete schedule1;
+    delete schedule2;
+}
+
+/**
+* should not leak memory when clear schedule.
+*/
+TEST(SchedulerTest, shoule_not_leak_memory_when_clear_schedule)
+{
+    ScheduleSpy* schedule = new ScheduleSpy(0);
+    Scheduler::sid_t id = Scheduler::getInstance()->setSchedule(schedule);
+    Scheduler::getInstance()->start(id);
+
+    Scheduler::getInstance()->clear(id);
+
+    count1ms();
+    CHECK_FALSE(schedule->is_called_execute);
+
+    delete schedule;
+}
+
 int main(int argc, char** argv)
 {
     return RUN_ALL_TESTS(argc, argv);
