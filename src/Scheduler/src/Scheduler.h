@@ -10,6 +10,7 @@
 class Schedule_if
 {
 public:
+    virtual ~Schedule_if(){};
     virtual void execute(void) = 0;
     virtual DWORD getTime(void) = 0;
     enum SchduleType : BYTE
@@ -35,6 +36,8 @@ public:
     sid_t setSchedule(Schedule_if* schedule);
 
     void start(sid_t id);
+    void cancel(sid_t id);
+    void clear(sid_t id);
 
     #define SCHEDULER_FUNC_MAX_COUNT    0x0F
     #define SCHEDULER_INVALID_ID        0xFF
@@ -49,7 +52,7 @@ private:
 
     struct ScheduleInfo_s
     {
-        BOOL m_is_started;
+        volatile BOOL m_is_started;
         volatile count_t m_count;
         Schedule_if* mp_schedule;
     };
