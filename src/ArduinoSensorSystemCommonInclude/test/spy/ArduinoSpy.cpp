@@ -9,6 +9,9 @@ static uint8_t pin_mode_called_mode[PIN_MODE_INDEX_COUNT];
 static uint8_t pin_write_called_pin[PIN_MODE_INDEX_COUNT];
 static uint8_t pin_write_called_value[PIN_MODE_INDEX_COUNT];
 
+// digitalRead
+static int pin_read_values[PIN_MODE_INDEX_COUNT];
+
 void pinMode(uint8_t pin, uint8_t mode)
 {
     for(int i=0; i<PIN_MODE_INDEX_COUNT; i++)
@@ -19,6 +22,12 @@ void pinMode(uint8_t pin, uint8_t mode)
         {
             pin_mode_called_pin[i]  = pin;
             pin_mode_called_mode[i] = mode;
+
+            // if the mode is pull up, set the value of read to high.
+            if(mode == INPUT_PULLUP)
+            {
+                pin_read_values[pin] = HIGH;
+            }
             break;
         }
     }
@@ -37,6 +46,11 @@ void digitalWrite(uint8_t pin, uint8_t val)
             break;
         }
     }
+}
+
+int digitalRead(uint8_t pin)
+{
+    return pin_read_values[pin];
 }
 
 /**
@@ -109,6 +123,11 @@ bool checkPinDigitalWrite(uint8_t pin, uint8_t val)
     return false;
 }
 
+void setReadValue(uint8_t pin, int value)
+{
+    pin_read_values[pin] = value;
+}
+
 void setupSpyArduino(void)
 {
     for(int i=0; i<PIN_MODE_INDEX_COUNT; i++)
@@ -120,5 +139,8 @@ void setupSpyArduino(void)
         // reset all the pin value of pin output.
         pin_write_called_pin[i] = PIN_WRITE_DO_NOT_CALL;
         pin_write_called_value[i] = PIN_WRITE_DO_NOT_CALL;
+
+        // reset all the pin value of pin input.
+        pin_read_values[i] = LOW;
     }
 }

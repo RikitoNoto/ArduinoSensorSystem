@@ -19,4 +19,6 @@ typedef enum{ FAIL = FALSE, SUCCESS = TRUE } RESULT;
 typedef DWORD MEMORY_SIZE_T; // memory size
 typedef MEMORY_SIZE_T SIZE_T; // utilty size
 
+typedef BYTE pinno_t;
+
 #endif // _DATA_TYPE_H_

@@ -5,7 +5,7 @@ DWORD Timer::m_elapsed_time_micros = 0;
 
 BOOL Timer::isTimeUpMillis(DWORD check_time)
 {
-    if(check_time >= Timer::m_elapsed_time_millis)
+    if(check_time <= Timer::m_elapsed_time_millis)
     {
         return TRUE;
     }
@@ -14,7 +14,7 @@ BOOL Timer::isTimeUpMillis(DWORD check_time)
 
 BOOL Timer::isTimeUpMicros(DWORD check_time)
 {
-    if(check_time >= Timer::m_elapsed_time_micros)
+    if(check_time <= Timer::m_elapsed_time_micros)
     {
         return TRUE;
     }
@@ -35,4 +35,14 @@ void Timer::setElapsedTimeMillis(DWORD elapsed_time)
 void Timer::setElapsedTimeMicros(DWORD elapsed_time)
 {
     Timer::m_elapsed_time_micros = elapsed_time;
+}
+
+void Timer::elapseTimeMillis(DWORD elapse_time)
+{
+    Timer::m_elapsed_time_millis += elapse_time;
+}
+
+void Timer::elapseTimeMicros(DWORD elapse_time)
+{
+    Timer::m_elapsed_time_micros += elapse_time;
 }

@@ -23,6 +23,9 @@ public:
     static void setup(void);
     static void setElapsedTimeMillis(DWORD elapsed_time);
     static void setElapsedTimeMicros(DWORD elapsed_time);
+
+    static void elapseTimeMillis(DWORD elapse_time);
+    static void elapseTimeMicros(DWORD elapse_time);
 private:
     static DWORD m_elapsed_time_millis;
     static DWORD m_elapsed_time_micros;
