@@ -9,7 +9,10 @@ public:
     // spy methods
     void startCount(void){};
 
-    void clearCount(void){};
+    void clearCount(void){
+        this->m_elapsed_time_micros = 0;
+        this->m_elapsed_time_millis = 0;
+    };
 
     void pauseCount(void){};
 

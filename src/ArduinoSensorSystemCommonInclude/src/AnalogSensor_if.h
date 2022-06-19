@@ -12,7 +12,8 @@ public:
     {
         NONE = 0,
         READING,
-        COMPLETE
+        READ_SUCCESS,
+        READ_FAILURE,
     };
 
     virtual void start(void) = 0;

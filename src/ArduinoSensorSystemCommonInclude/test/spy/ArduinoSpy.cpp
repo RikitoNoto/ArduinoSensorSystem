@@ -24,10 +24,10 @@ void pinMode(uint8_t pin, uint8_t mode)
             pin_mode_called_mode[i] = mode;
 
             // if the mode is pull up, set the value of read to high.
-            if(mode == INPUT_PULLUP)
-            {
-                pin_read_values[pin] = HIGH;
-            }
+            // if(mode == INPUT_PULLUP)
+            // {
+            //     pin_read_values[pin] = HIGH;
+            // }
             break;
         }
     }
