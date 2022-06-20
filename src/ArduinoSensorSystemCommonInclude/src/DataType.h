@@ -1,8 +1,6 @@
 #ifndef _DATA_TYPE_H_
 #define _DATA_TYPE_H_
 
-#include "Arduino.h"
-
 // unsigned
 typedef unsigned char       BYTE;   // 1byte
 typedef unsigned short      WORD;   // 2byte
@@ -17,7 +15,7 @@ typedef long long           SQWORD; // 8byte
 
 typedef enum{ FALSE = 0, TRUE = 1 } BOOL;
 typedef enum{ FAIL = FALSE, SUCCESS = TRUE } RESULT;
-typedef int SIGNAL;
+typedef int SIGNAL; // this is the same type of HIGH and LOW.
 
 typedef DWORD MEMORY_SIZE_T; // memory size
 typedef MEMORY_SIZE_T SIZE_T; // utilty size
