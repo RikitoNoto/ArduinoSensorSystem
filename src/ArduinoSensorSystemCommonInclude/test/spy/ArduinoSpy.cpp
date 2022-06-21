@@ -1,5 +1,7 @@
 #include <Arduino.h>
 
+Serial_ Serial;
+
 
 // pinMode
 static uint8_t pin_mode_called_pin[PIN_MODE_INDEX_COUNT];

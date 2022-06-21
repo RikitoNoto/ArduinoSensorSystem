@@ -7,22 +7,25 @@
 #define START_RESPONCE_LOW_TIME_US  (80)
 #define START_RESPONCE_HIGH_TIME_US (80)
 
-#define _DHT_11_DATA_SIZE   (40)
+#define RECEIVE_DATA_SIZE   (40)
+#define HUM_DATA_BIT_SIZE           (16)
+#define TEMP_DATA_BIT_SIZE          (16)
+#define PARITY_DATA_SIZE            (8)
+#define SUM_DATA_PARTITION_SIZE     (8)
+
 #define DATA_HIGH       0x01
 #define DATA_LOW        0x00
 #define DATA_INVALID    0xFF
 
-#define HUM_DATA_BIT_SIZE   16
-#define TEMP_DATA_BIT_SIZE  16
-
 #define RECEIVE_DATA_TIME_UP_TIME   (100)
+
 
 Dht11::Dht11(pinno_t datapin_no)
 {
     this->m_data_pin_no = datapin_no;
     this->m_timer.clearCount();
-    this->m_datas = new BYTE[_DHT_11_DATA_SIZE];
-    memset(this->m_datas, 0, sizeof(BYTE)*(_DHT_11_DATA_SIZE));
+    this->m_datas = new BYTE[RECEIVE_DATA_SIZE];
+    memset(this->m_datas, 0, sizeof(BYTE)*(RECEIVE_DATA_SIZE));
     this->m_reading_index = 0;
     this->m_phase = NONE;
 
@@ -159,7 +162,7 @@ Dht11::PHASE Dht11::receiveDatas(PHASE current, PHASE pre)
     SIGNAL read_data = digitalRead(this->m_data_pin_no);
     if(current != pre)
     {
-        memset(this->m_datas, 0, sizeof(BYTE)*(_DHT_11_DATA_SIZE));
+        memset(this->m_datas, 0, sizeof(BYTE)*(RECEIVE_DATA_SIZE));
         this->m_timer.clearCount();
         this->m_timer.startCount();
     }
@@ -191,7 +194,7 @@ Dht11::PHASE Dht11::receiveDatas(PHASE current, PHASE pre)
 
             this->m_datas[this->m_reading_index] = data;
             this->m_reading_index++;
-            if(this->m_reading_index == _DHT_11_DATA_SIZE)
+            if(this->m_reading_index == RECEIVE_DATA_SIZE)
             {
                 if(this->sharpingDatas() == SUCCESS)
                 {
@@ -247,13 +250,14 @@ RESULT Dht11::checkParity(BYTE* datas)
     RESULT result = FAIL;
     BYTE parity = 0;
     BYTE data_sum = 0;
-    for(WORD i=0; i<4; i++)
+    WORD data_loop_count = (RECEIVE_DATA_SIZE-PARITY_DATA_SIZE)/SUM_DATA_PARTITION_SIZE;
+    for(WORD i=0; i<data_loop_count; i++)
     {
         BYTE byte_data = 0;
-        for(WORD j=0; j<8; j++)
+        for(WORD j=0; j<SUM_DATA_PARTITION_SIZE; j++)
         {
             byte_data = byte_data << 1;
-            if(datas[i*8 + j] == DATA_HIGH)
+            if(datas[i*SUM_DATA_PARTITION_SIZE + j] == DATA_HIGH)
             {
                 byte_data |= 1;
             }
@@ -261,10 +265,10 @@ RESULT Dht11::checkParity(BYTE* datas)
         data_sum += byte_data;
     }
 
-    for(WORD i=0; i<8; i++)
+    for(WORD i=0; i<PARITY_DATA_SIZE; i++)
     {
         parity = parity << 1;
-        if(datas[32 + i] == DATA_HIGH)
+        if(datas[(RECEIVE_DATA_SIZE-PARITY_DATA_SIZE) + i] == DATA_HIGH)
         {
             parity |= 1;
         }
