@@ -1,25 +1,40 @@
 #include "Dht11.h"
 
 Dht11* dht = nullptr;
+BOOL is_start = FALSE;
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
 
   dht = new Dht11(10);
-  dht->start();
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  if(dht->execute() == Dht11::READ_STATUS::READ_SUCCESS)
+
+  if(!is_start)
   {
-    Serial.println(dht->getData());
-    dht->start();
+      if(dht->start())
+      {
+        is_start = TRUE;
+      }
   }
-  else if(dht->execute() == Dht11::READ_STATUS::READ_FAILURE)
+  
+  if(is_start)
   {
-    Serial.println("failure");
-    dht->start();
+    switch(dht->execute())
+    {
+      case Dht11::READ_STATUS::READ_SUCCESS:
+        Serial.println(dht->getData());
+        Serial.println("success");
+        is_start = FALSE;
+        break;
+      case Dht11::READ_STATUS::READ_FAILURE:
+        Serial.println("failure");
+        is_start = FALSE;
+        break;      
+    }
   }
+  
 }

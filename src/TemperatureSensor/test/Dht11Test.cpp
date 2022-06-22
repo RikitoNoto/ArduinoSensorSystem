@@ -6,11 +6,15 @@
 
 void execute(Dht11* dht);
 
-TEST_GROUP(Dht11)
+
+TEST_GROUP(Dht11Test)
 {
+    static const DWORD INTERVAL_TIME = 5000;
+    static const DWORD TIME_UP_TIME_RECEIVE_DATA = 201;
     void setup()
     {
         setupSpyArduino();
+        Timer::setup();
     }
 
     void teardown()
@@ -48,11 +52,11 @@ TEST_GROUP(Dht11)
         WORD high_time = 0;
         if(data)
         {
-            high_time = 28;
+            high_time = 70;
         }
         else
         {
-            high_time = 70;
+            high_time = 28;
         }
 
         // high value for 50us as signal.
@@ -124,8 +128,9 @@ TEST_GROUP(Dht11)
             dht = new Dht11(pin);
             need_delete = TRUE;
         }
-        dht->start();
-        checkPinStateFor(/*pin*/pin, /*mode*/OUTPUT, /*out*/LOW, /*from_time*/0, /*to_time*/20, /*f*/execute, /*dht*/dht, /*unit*/TIMER_UNIT_MS);
+        Timer::elapseTimeMillis(INTERVAL_TIME);
+        CHECK_EQUAL(SUCCESS, dht->start());
+        checkPinStateFor(/*pin*/pin, /*mode*/OUTPUT, /*out*/LOW, /*from_time*/Timer::m_abs_elapsed_time_millis, /*to_time*/Timer::m_abs_elapsed_time_millis+20, /*f*/execute, /*dht*/dht, /*unit*/TIMER_UNIT_MS);
 
         sendResponce(pin, dht, execute);
 
@@ -147,64 +152,69 @@ void execute(Dht11* dht)
 /**
 * should be DATA to LOW when start with pin 8.
 */
-TEST(Dht11, should_be_DATA_to_LOW_when_start_with_pin_8)
+TEST(Dht11Test, should_be_DATA_to_LOW_when_start_with_pin_8)
 {
     Dht11* dht = new Dht11(8);
+    Timer::elapseTimeMillis(INTERVAL_TIME);
     dht->start();
-    checkPinStateFor(/*pin*/8, /*mode*/OUTPUT, /*out*/LOW, /*from_time*/0, /*to_time*/1, /*f*/execute, /*dht*/dht, /*unit*/TIMER_UNIT_MS);
+    checkPinStateFor(/*pin*/8, /*mode*/OUTPUT, /*out*/LOW, /*from_time*/Timer::m_abs_elapsed_time_millis, /*to_time*/Timer::m_abs_elapsed_time_millis+1, /*f*/execute, /*dht*/dht, /*unit*/TIMER_UNIT_MS);
     delete dht;
 }
 
 /**
 * should be DATA to LOW when start with pin 10.
 */
-TEST(Dht11, should_be_DATA_to_LOW_when_start_with_pin_10)
+TEST(Dht11Test, should_be_DATA_to_LOW_when_start_with_pin_10)
 {
     Dht11* dht = new Dht11(10);
+    Timer::elapseTimeMillis(INTERVAL_TIME);
     dht->start();
-    checkPinStateFor(/*pin*/10, /*mode*/OUTPUT, /*out*/LOW, /*from_time*/0, /*to_time*/1, /*f*/execute, /*dht*/dht, /*unit*/TIMER_UNIT_MS);
+    checkPinStateFor(/*pin*/10, /*mode*/OUTPUT, /*out*/LOW, /*from_time*/Timer::m_abs_elapsed_time_millis, /*to_time*/Timer::m_abs_elapsed_time_millis+1, /*f*/execute, /*dht*/dht, /*unit*/TIMER_UNIT_MS);
     delete dht;
 }
 
 /**
 * should be DATA to LOW after 10ms from start with pin 8.
 */
-TEST(Dht11, should_be_DATA_to_LOW_after_10ms_from_start_with_pin_8)
+TEST(Dht11Test, should_be_DATA_to_LOW_after_10ms_from_start_with_pin_8)
 {
     Dht11* dht = new Dht11(8);
+    Timer::elapseTimeMillis(INTERVAL_TIME);
     dht->start();
-    checkPinStateFor(/*pin*/8, /*mode*/OUTPUT, /*out*/LOW, /*from_time*/0, /*to_time*/10, /*f*/execute, /*dht*/dht, /*unit*/TIMER_UNIT_MS);
+    checkPinStateFor(/*pin*/8, /*mode*/OUTPUT, /*out*/LOW, /*from_time*/Timer::m_abs_elapsed_time_millis, /*to_time*/Timer::m_abs_elapsed_time_millis+10, /*f*/execute, /*dht*/dht, /*unit*/TIMER_UNIT_MS);
     delete dht;
 }
 
 /**
 * should be DATA changes INPUT_PULLUP after 20ms from start with pin 8.
 */
-TEST(Dht11, should_be_DATA_changes_INPUT_PULLUP_after_20ms_from_start_with_pin_8)
+TEST(Dht11Test, should_be_DATA_changes_INPUT_PULLUP_after_20ms_from_start_with_pin_8)
 {
     Dht11* dht = new Dht11(8);
+    Timer::elapseTimeMillis(INTERVAL_TIME);
     dht->start();
-    checkPinStateFor(/*pin*/8, /*mode*/OUTPUT, /*out*/LOW, /*from_time*/0, /*to_time*/20, /*f*/execute, /*dht*/dht, /*unit*/TIMER_UNIT_MS);
-    checkPinStateFor(/*pin*/8, /*mode*/INPUT_PULLUP, /*out*/0, /*from_time*/21, /*to_time*/21, /*f*/execute, /*dht*/dht, /*unit*/TIMER_UNIT_MS);
+    checkPinStateFor(/*pin*/8, /*mode*/OUTPUT, /*out*/LOW, /*from_time*/Timer::m_abs_elapsed_time_millis, /*to_time*/Timer::m_abs_elapsed_time_millis+20, /*f*/execute, /*dht*/dht, /*unit*/TIMER_UNIT_MS);
+    checkPinStateFor(/*pin*/8, /*mode*/INPUT_PULLUP, /*out*/0, /*from_time*/Timer::m_abs_elapsed_time_millis, /*to_time*/Timer::m_abs_elapsed_time_millis, /*f*/execute, /*dht*/dht, /*unit*/TIMER_UNIT_MS);
     delete dht;
 }
 
 /**
 * should be DATA changes INPUT_PULLUP after 20ms from start with pin 10.
 */
-TEST(Dht11, should_be_DATA_changes_INPUT_PULLUP_after_20ms_from_start_with_pin_10)
+TEST(Dht11Test, should_be_DATA_changes_INPUT_PULLUP_after_20ms_from_start_with_pin_10)
 {
     Dht11* dht = new Dht11(10);
+    Timer::elapseTimeMillis(INTERVAL_TIME);
     dht->start();
-    checkPinStateFor(/*pin*/10, /*mode*/OUTPUT, /*out*/LOW, /*from_time*/0, /*to_time*/20, /*f*/execute, /*dht*/dht, /*unit*/TIMER_UNIT_MS);
-    checkPinStateFor(/*pin*/10, /*mode*/INPUT_PULLUP, /*out*/0, /*from_time*/21, /*to_time*/21, /*f*/execute, /*dht*/dht, /*unit*/TIMER_UNIT_MS);
+    checkPinStateFor(/*pin*/10, /*mode*/OUTPUT, /*out*/LOW, /*from_time*/Timer::m_abs_elapsed_time_millis, /*to_time*/Timer::m_abs_elapsed_time_millis+20, /*f*/execute, /*dht*/dht, /*unit*/TIMER_UNIT_MS);
+    checkPinStateFor(/*pin*/10, /*mode*/INPUT_PULLUP, /*out*/0, /*from_time*/Timer::m_abs_elapsed_time_millis, /*to_time*/Timer::m_abs_elapsed_time_millis, /*f*/execute, /*dht*/dht, /*unit*/TIMER_UNIT_MS);
     delete dht;
 }
 
 /**
 * should be read 0 as the value.
 */
-TEST(Dht11, should_be_read_0_as_the_value)
+TEST(Dht11Test, should_be_read_0_as_the_value)
 {
     checkSendData(10, 0x0000000000, 0);
 }
@@ -212,7 +222,7 @@ TEST(Dht11, should_be_read_0_as_the_value)
 /**
 * should be read 1 as the value.
 */
-TEST(Dht11, should_be_read_1_as_the_value)
+TEST(Dht11Test, should_be_read_1_as_the_value)
 {
     checkSendData(10, 0x0000000101, 1);
 }
@@ -220,16 +230,54 @@ TEST(Dht11, should_be_read_1_as_the_value)
 /**
 * should be read datas twice.
 */
-TEST(Dht11, should_be_read_datas_twice)
+TEST(Dht11Test, should_be_read_datas_twice)
 {
-    checkSendData(10, 0x0000000101, 1);
-    checkSendData(10, 0x0000000202, 2);
+    Dht11* dht = new Dht11(10);
+    checkSendData(10, 0x0000000101, 1, dht);
+    Timer::elapseTimeMillis(INTERVAL_TIME);
+    checkSendData(10, 0x0000000202, 2, dht);
+    delete dht;
+}
+
+/**
+* should be not start when not 2s have passed.
+*/
+TEST(Dht11Test, should_be_not_start_when_not_2s_have_passed)
+{
+    Dht11* dht = new Dht11(10);
+    Timer::elapseTimeMillis(INTERVAL_TIME-1);
+    CHECK_EQUAL(FAIL, dht->start());
+    delete dht;
+}
+
+/**
+* should be not restart when not 2s have passed after success.
+*/
+TEST(Dht11Test, should_be_not_restart_when_not_2s_have_passed_after_success)
+{
+    Dht11* dht = new Dht11(10);
+    checkSendData(10, 0x0000000101, 1, dht);
+    Timer::elapseTimeMillis(INTERVAL_TIME-1);
+    CHECK_EQUAL(FAIL, dht->start());
+    delete dht;
+}
+
+/**
+* should be not restart when not 2s have passed after failure.
+*/
+TEST(Dht11Test, should_be_not_restart_when_not_2s_have_passed_after_failure)
+{
+    Dht11* dht = new Dht11(10);
+    checkSendData(10, 0x0000000100, 1, dht);
+    Timer::elapseTimeMillis(INTERVAL_TIME-1);
+    CHECK_EQUAL(FAIL, dht->start());
+    delete dht;
 }
 
 /**
 * should be return the complete when finish the communication to dht11.
 */
-TEST(Dht11, should_be_return_the_complete_when_finish)
+TEST(Dht11Test, should_be_return_the_complete_when_finish)
 {
     Dht11* dht = new Dht11(10);
     checkSendData(10, 0x0000000101, 1, dht);
@@ -240,9 +288,10 @@ TEST(Dht11, should_be_return_the_complete_when_finish)
 /**
 * should be return the reading for reading.
 */
-TEST(Dht11, should_be_return_the_reading_for_reading)
+TEST(Dht11Test, should_be_return_the_reading_for_reading)
 {
     Dht11* dht = new Dht11(10);
+    Timer::elapseTimeMillis(INTERVAL_TIME);
     dht->start();
     CHECK_EQUAL(Dht11::READ_STATUS::READING, dht->execute());
     delete dht;
@@ -251,7 +300,7 @@ TEST(Dht11, should_be_return_the_reading_for_reading)
 /**
 * should be return the failure when received invalid parity.
 */
-TEST(Dht11, should_be_return_the_failure_when_received_invalid_parity)
+TEST(Dht11Test, should_be_return_the_failure_when_received_invalid_parity)
 {
     Dht11* dht = new Dht11(10);
     checkSendData(/*pin*/10, /*data*/0x0000000100, /*expect*/1, dht);
@@ -262,10 +311,10 @@ TEST(Dht11, should_be_return_the_failure_when_received_invalid_parity)
 /**
 * should be not do anything when not started.
 */
-TEST(Dht11, should_be_not_do_anything_when_not_started)
+TEST(Dht11Test, should_be_not_do_anything_when_not_started)
 {
     Dht11* dht = new Dht11(10);
-    checkPinStateFor(/*pin*/10, /*mode*/OUTPUT, /*out*/LOW, /*from_time*/0, /*to_time*/20, /*f*/execute, /*dht*/dht, /*unit*/TIMER_UNIT_MS, FALSE);
+    checkPinStateFor(/*pin*/10, /*mode*/OUTPUT, /*out*/LOW, /*from_time*/Timer::m_abs_elapsed_time_millis, /*to_time*/Timer::m_abs_elapsed_time_millis+20, /*f*/execute, /*dht*/dht, /*unit*/TIMER_UNIT_MS, FALSE);
     sendResponce(10, dht, execute);
     sendData(10, 0x0000000101, dht, execute);
 
@@ -276,17 +325,41 @@ TEST(Dht11, should_be_not_do_anything_when_not_started)
 /**
 * should be return failure when receive time out.
 */
-TEST(Dht11, should_be_return_failure_when_receive_time_out)
+TEST(Dht11Test, should_be_return_failure_when_receive_time_out)
 {
     Dht11* dht = new Dht11(10);
+    Timer::elapseTimeMillis(INTERVAL_TIME);
     dht->start();
-    checkPinStateFor(/*pin*/10, /*mode*/OUTPUT, /*out*/LOW, /*from_time*/0, /*to_time*/20, /*f*/execute, /*dht*/dht, /*unit*/TIMER_UNIT_MS);
+    checkPinStateFor(/*pin*/10, /*mode*/OUTPUT, /*out*/LOW, /*from_time*/Timer::m_abs_elapsed_time_millis, /*to_time*/Timer::m_abs_elapsed_time_millis+20, /*f*/execute, /*dht*/dht, /*unit*/TIMER_UNIT_MS);
     sendResponce(10, dht, execute);
+
+    // elapse 100us.
+    for(WORD i=0; i<TIME_UP_TIME_RECEIVE_DATA; i++)
+    {
+        setReadValue(10, LOW);
+        Timer::elapseTimeMicros(1);
+        dht->execute();
+    }
+    CHECK_EQUAL(Dht11::READ_STATUS::READ_FAILURE, dht->execute());
+
+    delete dht;
+}
+
+/**
+* should be retry when do not receive responce.
+*/
+TEST(Dht11Test, should_be_retry_when_do_not_receive_responce)
+{
+    Dht11* dht = new Dht11(10);
+    Timer::elapseTimeMillis(INTERVAL_TIME);
+    dht->start();
+    checkPinStateFor(/*pin*/10, /*mode*/OUTPUT, /*out*/LOW, /*from_time*/Timer::m_abs_elapsed_time_millis, /*to_time*/Timer::m_abs_elapsed_time_millis+20, /*f*/execute, /*dht*/dht, /*unit*/TIMER_UNIT_MS);
+    // do not send responce.
 
     // elapse 100us.
     for(WORD i=0; i<101; i++)
     {
-        setReadValue(10, LOW);
+        setReadValue(10, HIGH);
         Timer::elapseTimeMicros(1);
         dht->execute();
     }

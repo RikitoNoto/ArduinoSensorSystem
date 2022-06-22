@@ -12,7 +12,7 @@ public:
     Dht11(pinno_t datapin_no);
     virtual ~Dht11();
     virtual void initilize(WORD* option=nullptr, WORD option_count=0){};
-    virtual void start();
+    virtual RESULT start();
 
     virtual READ_STATUS execute(WORD* option=nullptr, WORD option_count=0);
 
@@ -21,6 +21,8 @@ public:
 private:
     pinno_t m_data_pin_no;
     Timer m_timer;
+    Timer m_time_up_observer;
+    Timer m_retry_timer;
 
     DWORD m_reading_index;
     BYTE* m_datas;

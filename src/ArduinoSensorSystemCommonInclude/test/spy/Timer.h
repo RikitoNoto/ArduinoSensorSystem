@@ -6,21 +6,19 @@
 class Timer
 {
 public:
+    Timer();
     // spy methods
-    void startCount(void){};
+    void startCount(void);
 
-    void clearCount(void){
-        this->m_elapsed_time_micros = 0;
-        this->m_elapsed_time_millis = 0;
-    };
+    void clearCount(void);
 
     void pauseCount(void){};
 
     BOOL isTimeUpMillis(DWORD check_time);
     BOOL isTimeUpMicros(DWORD check_time);
 
-    DWORD getElapsedTimeMillis(void){return Timer::m_elapsed_time_millis;};
-    DWORD getElapsedTimeMicros(void){return Timer::m_elapsed_time_micros;};
+    DWORD getElapsedTimeMillis(void);
+    DWORD getElapsedTimeMicros(void);
 
     // for test
     static void setup(void);
@@ -29,9 +27,12 @@ public:
 
     static void elapseTimeMillis(DWORD elapse_time);
     static void elapseTimeMicros(DWORD elapse_time);
+    static DWORD m_abs_elapsed_time_millis;
+    static DWORD m_abs_elapsed_time_micros;
 private:
-    static DWORD m_elapsed_time_millis;
-    static DWORD m_elapsed_time_micros;
+
+    DWORD m_count_millis;
+    DWORD m_count_micros;
 };
 
 #endif // _TIMER_H_

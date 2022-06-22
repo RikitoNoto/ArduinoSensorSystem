@@ -18,7 +18,7 @@ public:
     };
 
     virtual void initilize(WORD* option=nullptr, WORD option_count=0) = 0;
-    virtual void start(void) = 0;
+    virtual RESULT start(void) = 0;
     virtual READ_STATUS execute(WORD* option=nullptr, WORD option_count=0) = 0;
 
     virtual DWORD getData(void) = 0;
