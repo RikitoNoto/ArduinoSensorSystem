@@ -131,7 +131,7 @@ TEST_GROUP(Dht11Test)
         Timer::elapseTimeMillis(INTERVAL_TIME);
         CHECK_EQUAL(SUCCESS, dht->start());
         checkPinStateFor(/*pin*/pin, /*mode*/OUTPUT, /*out*/LOW, /*from_time*/Timer::m_abs_elapsed_time_millis, /*to_time*/Timer::m_abs_elapsed_time_millis+20, /*f*/execute, /*dht*/dht, /*unit*/TIMER_UNIT_MS);
-
+        Timer::setElapsedTimeMicros(Timer::m_abs_elapsed_time_millis*1000);
         sendResponce(pin, dht, execute);
 
         sendData(pin, data, dht, execute);
@@ -355,6 +355,34 @@ TEST(Dht11Test, should_be_retry_when_do_not_receive_responce)
     dht->start();
     checkPinStateFor(/*pin*/10, /*mode*/OUTPUT, /*out*/LOW, /*from_time*/Timer::m_abs_elapsed_time_millis, /*to_time*/Timer::m_abs_elapsed_time_millis+20, /*f*/execute, /*dht*/dht, /*unit*/TIMER_UNIT_MS);
     // do not send responce.
+
+    // elapse 100us.
+    for(WORD i=0; i<101; i++)
+    {
+        setReadValue(10, HIGH);
+        Timer::elapseTimeMicros(1);
+        dht->execute();
+    }
+    CHECK_EQUAL(Dht11::READ_STATUS::READ_FAILURE, dht->execute());
+
+    delete dht;
+}
+
+/**
+* should be failure when do not receive responce with low oneshot.
+*/
+TEST(Dht11Test, should_be_failure_when_do_not_receive_responce_with_low_oneshot)
+{
+    Dht11* dht = new Dht11(10);
+    Timer::elapseTimeMillis(INTERVAL_TIME);
+    dht->start();
+    checkPinStateFor(/*pin*/10, /*mode*/OUTPUT, /*out*/LOW, /*from_time*/Timer::m_abs_elapsed_time_millis, /*to_time*/Timer::m_abs_elapsed_time_millis+20, /*f*/execute, /*dht*/dht, /*unit*/TIMER_UNIT_MS);
+    // do not send responce.
+
+    setReadValue(10, LOW);
+    Timer::elapseTimeMicros(1);
+    dht->execute();
+    CHECK_EQUAL(Dht11::READ_STATUS::READING, dht->execute());
 
     // elapse 100us.
     for(WORD i=0; i<101; i++)

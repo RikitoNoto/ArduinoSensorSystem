@@ -21,7 +21,7 @@
 
 #define RECEIVE_DATA_TIME_UP_TIME       (200)
 #define RECEIVE_RESPONCE_TIME_UP_TIME   (100)
-
+DWORD debug_times[5];
 
 Dht11::Dht11(pinno_t datapin_no)
 {
@@ -60,6 +60,7 @@ RESULT Dht11::start()
         this->m_timer.startCount();
         this->m_phase = PHASE::SEND_START_SIGNAL;
         result = SUCCESS;
+        debug_times[0] = micros();  // for debug.
     }
     return result;
 }
@@ -74,21 +75,25 @@ Dht11::READ_STATUS Dht11::execute(WORD* option, WORD option_count)
     {
     case PHASE::SEND_START_SIGNAL:
         next = this->sendStartSignalPhase(this->m_phase, this->m_pre_phase);
+        debug_times[1] = micros();  // for debug.
         status = READ_STATUS::READING;
         break;
 
     case PHASE::RECEIVE_START_SIGNAL_LOW:
         next = this->receiveStartSignalLowPhase(this->m_phase, this->m_pre_phase);
+        debug_times[2] = micros();  // for debug.
         status = READ_STATUS::READING;
         break;
 
     case PHASE::RECEIVE_START_SIGNAL_HIGH:
         next = this->receiveStartSignalHighPhase(this->m_phase, this->m_pre_phase);
+        debug_times[3] = micros();  // for debug.
         status = READ_STATUS::READING;
         break;
 
     case PHASE::RECEIVE_DATAS:
         next = this->receiveDatas(this->m_phase, this->m_pre_phase);
+        debug_times[4] = micros();  // for debug.
         status = READ_STATUS::READING;
         break;
     default:
@@ -110,6 +115,16 @@ Dht11::READ_STATUS Dht11::execute(WORD* option, WORD option_count)
         {
             this->m_retry_timer.clearCount();
             this->m_retry_timer.startCount();
+            Serial.print(debug_times[0]);
+            Serial.print(",");
+            Serial.print(debug_times[1]);
+            Serial.print(",");
+            Serial.print(debug_times[2]);
+            Serial.print(",");
+            Serial.print(debug_times[3]);
+            Serial.print(",");
+            Serial.print(debug_times[4]);
+            Serial.println();
         }
         status = READ_STATUS::READ_FAILURE;
     }
@@ -124,13 +139,17 @@ Dht11::READ_STATUS Dht11::execute(WORD* option, WORD option_count)
 Dht11::PHASE Dht11::sendStartSignalPhase(PHASE current, PHASE pre)
 {
     PHASE next = current;
-
-    pinMode(this->m_data_pin_no, OUTPUT);
-    digitalWrite(this->m_data_pin_no, LOW);
+    if(current != pre)
+    {
+        pinMode(this->m_data_pin_no, OUTPUT);
+        digitalWrite(this->m_data_pin_no, LOW);
+    }
 
     if(this->m_timer.isTimeUpMillis(START_SIGNAL_TIME_MS))
     {
         next = PHASE::RECEIVE_START_SIGNAL_LOW;
+        this->m_timer.clearCount();
+        this->m_timer.startCount();
     }
 
     return next;
@@ -156,6 +175,8 @@ Dht11::PHASE Dht11::receiveStartSignalLowPhase(PHASE current, PHASE pre)
     if(this->m_timer.isTimeUpMicros(START_RESPONCE_LOW_TIME_US))
     {
         next = PHASE::RECEIVE_START_SIGNAL_HIGH;
+        this->m_timer.clearCount();
+        this->m_timer.startCount();
     }
 
     if(this->m_time_up_observer.isTimeUpMicros(RECEIVE_RESPONCE_TIME_UP_TIME))
@@ -173,7 +194,7 @@ Dht11::PHASE Dht11::receiveStartSignalHighPhase(PHASE current, PHASE pre)
 
     if(current != pre)
     {
-        pinMode(this->m_data_pin_no, INPUT_PULLUP);
+        // pinMode(this->m_data_pin_no, INPUT_PULLUP);
     }
 
     if(digitalRead(this->m_data_pin_no) != HIGH)
@@ -196,7 +217,7 @@ Dht11::PHASE Dht11::receiveDatas(PHASE current, PHASE pre)
     SIGNAL read_data = digitalRead(this->m_data_pin_no);
     if(current != pre)
     {
-        memset(this->m_datas, 0, sizeof(BYTE)*(RECEIVE_DATA_SIZE));
+        memset(this->m_datas, DATA_INVALID, sizeof(BYTE)*(RECEIVE_DATA_SIZE));
         this->m_timer.clearCount();
         this->m_timer.startCount();
     }
@@ -207,7 +228,6 @@ Dht11::PHASE Dht11::receiveDatas(PHASE current, PHASE pre)
     {
         if(this->m_pre_signal == LOW)
         {
-
             this->m_low_time = this->m_timer.getElapsedTimeMicros();
         }
         else if((this->m_pre_signal == HIGH) && (this->m_low_time >= 50))

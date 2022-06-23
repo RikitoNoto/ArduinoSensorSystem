@@ -14,6 +14,11 @@ static uint8_t pin_write_called_value[PIN_MODE_INDEX_COUNT];
 // digitalRead
 static int pin_read_values[PIN_MODE_INDEX_COUNT];
 
+unsigned long micros()
+{
+    return 0;
+}
+
 void pinMode(uint8_t pin, uint8_t mode)
 {
     for(int i=0; i<PIN_MODE_INDEX_COUNT; i++)

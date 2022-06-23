@@ -59,6 +59,7 @@ void Timer::setup(void)
 void Timer::setElapsedTimeMillis(DWORD elapsed_time)
 {
     Timer::m_abs_elapsed_time_millis = elapsed_time;
+    Timer::m_abs_elapsed_time_micros = elapsed_time*1000;
 }
 
 void Timer::setElapsedTimeMicros(DWORD elapsed_time)
@@ -69,6 +70,7 @@ void Timer::setElapsedTimeMicros(DWORD elapsed_time)
 void Timer::elapseTimeMillis(DWORD elapse_time)
 {
     Timer::m_abs_elapsed_time_millis += elapse_time;
+    Timer::m_abs_elapsed_time_micros += elapse_time*1000;
 }
 
 void Timer::elapseTimeMicros(DWORD elapse_time)
