@@ -15,21 +15,25 @@
 #define PARITY_DATA_SIZE            (8)
 #define SUM_DATA_PARTITION_SIZE     (8)
 
+#define RECEIVE_DATA_ARRAY_SIZE     (RECEIVE_DATA_SIZE * 2 + 1) // first HIGH signal + data size(low + high)
+
+#define THRESHOLD_TIME_HIGH         (50)
+
 #define DATA_HIGH       0x01
 #define DATA_LOW        0x00
 #define DATA_INVALID    0xFF
 
 #define RECEIVE_DATA_TIME_UP_TIME       (200)
 #define RECEIVE_RESPONCE_TIME_UP_TIME   (100)
-DWORD debug_times[5];
+DWORD debug_times[40];
 
 Dht11::Dht11(pinno_t datapin_no)
 {
     this->m_data_pin_no = datapin_no;
     this->m_timer.clearCount();
     this->m_time_up_observer.clearCount();
-    this->m_datas = new BYTE[RECEIVE_DATA_SIZE];
-    memset(this->m_datas, 0, sizeof(BYTE)*(RECEIVE_DATA_SIZE));
+    this->m_datas = new DWORD[RECEIVE_DATA_ARRAY_SIZE];
+    memset(this->m_datas, 0, sizeof(DWORD)*(RECEIVE_DATA_ARRAY_SIZE));
     this->m_reading_index = 0;
     this->m_phase = NONE;
 
@@ -53,14 +57,13 @@ RESULT Dht11::start()
         this->m_low_time = 0;
         this->m_high_time = 0;
 
-        memset(this->m_datas, 0, sizeof(BYTE)*(RECEIVE_DATA_SIZE));
+        memset(this->m_datas, 0, sizeof(DWORD)*(RECEIVE_DATA_ARRAY_SIZE));
         this->m_reading_index = 0;
         this->m_pre_signal = HIGH;
         this->m_timer.clearCount();
         this->m_timer.startCount();
         this->m_phase = PHASE::SEND_START_SIGNAL;
         result = SUCCESS;
-        debug_times[0] = micros();  // for debug.
     }
     return result;
 }
@@ -75,25 +78,21 @@ Dht11::READ_STATUS Dht11::execute(WORD* option, WORD option_count)
     {
     case PHASE::SEND_START_SIGNAL:
         next = this->sendStartSignalPhase(this->m_phase, this->m_pre_phase);
-        debug_times[1] = micros();  // for debug.
         status = READ_STATUS::READING;
         break;
 
     case PHASE::RECEIVE_START_SIGNAL_LOW:
         next = this->receiveStartSignalLowPhase(this->m_phase, this->m_pre_phase);
-        debug_times[2] = micros();  // for debug.
         status = READ_STATUS::READING;
         break;
 
     case PHASE::RECEIVE_START_SIGNAL_HIGH:
         next = this->receiveStartSignalHighPhase(this->m_phase, this->m_pre_phase);
-        debug_times[3] = micros();  // for debug.
         status = READ_STATUS::READING;
         break;
 
     case PHASE::RECEIVE_DATAS:
         next = this->receiveDatas(this->m_phase, this->m_pre_phase);
-        debug_times[4] = micros();  // for debug.
         status = READ_STATUS::READING;
         break;
     default:
@@ -115,16 +114,6 @@ Dht11::READ_STATUS Dht11::execute(WORD* option, WORD option_count)
         {
             this->m_retry_timer.clearCount();
             this->m_retry_timer.startCount();
-            Serial.print(debug_times[0]);
-            Serial.print(",");
-            Serial.print(debug_times[1]);
-            Serial.print(",");
-            Serial.print(debug_times[2]);
-            Serial.print(",");
-            Serial.print(debug_times[3]);
-            Serial.print(",");
-            Serial.print(debug_times[4]);
-            Serial.println();
         }
         status = READ_STATUS::READ_FAILURE;
     }
@@ -214,44 +203,54 @@ Dht11::PHASE Dht11::receiveStartSignalHighPhase(PHASE current, PHASE pre)
 Dht11::PHASE Dht11::receiveDatas(PHASE current, PHASE pre)
 {
     PHASE next = current;
-    SIGNAL read_data = digitalRead(this->m_data_pin_no);
-    if(current != pre)
-    {
-        memset(this->m_datas, DATA_INVALID, sizeof(BYTE)*(RECEIVE_DATA_SIZE));
-        this->m_timer.clearCount();
-        this->m_timer.startCount();
-    }
 
-
-    // if change signal
-    if(read_data != this->m_pre_signal)
+    while(TRUE)
     {
-        if(this->m_pre_signal == LOW)
+        if(digitalRead(this->m_data_pin_no) == LOW)
         {
-            this->m_low_time = this->m_timer.getElapsedTimeMicros();
+            break;
         }
-        else if((this->m_pre_signal == HIGH) && (this->m_low_time >= 50))
+    }
+    while(TRUE)
+    {
+        SIGNAL read_data = digitalRead(this->m_data_pin_no);
+        // if(current != pre)
+        // {
+        //     this->m_pre_signal = read_data;
+        //     this->m_timer.clearCount();
+        //     this->m_timer.startCount();
+        //     if(read_data == LOW)
+        //     {
+        //         this->m_reading_index = 1;
+        //     }
+        // }
+
+        // if change signal
+        if(read_data != this->m_pre_signal)
         {
-            DWORD elapsed_time = this->m_timer.getElapsedTimeMicros();
-            BYTE data = DATA_INVALID;
-
-            // the signal is low when the time elapsed 26-28ms.
-            // if( (elapsed_time >= 26) && (elapsed_time <= 28) )
-            if(elapsed_time < 50)
-            {
-                data = DATA_LOW;
-            }
-            // the signal is high when the time elapsed 50-70ms.
-            else if( (elapsed_time >= 50) && (elapsed_time <= 70) )
-            {
-                data = DATA_HIGH;
-            }
-
-            this->m_datas[this->m_reading_index] = data;
+            this->m_datas[this->m_reading_index] = this->m_timer.getElapsedTimeMicros();
             this->m_reading_index++;
-            if(this->m_reading_index == RECEIVE_DATA_SIZE)
+            this->m_timer.clearCount();
+            this->m_timer.startCount(); // count start.
+
+            if(this->m_reading_index >= RECEIVE_DATA_ARRAY_SIZE)
             {
-                if(this->sharpingDatas() == SUCCESS)
+                BYTE signals[RECEIVE_DATA_SIZE] = {0};
+                for(WORD i=0; i < RECEIVE_DATA_SIZE; i++)
+                {
+                    BYTE data = DATA_LOW;
+                    if(this->m_datas[i*2+1] > THRESHOLD_TIME_HIGH)
+                    {
+                        data = DATA_HIGH;
+                    }
+
+                    signals[i] = data;
+                    Serial.print(m_datas[i]);
+                    Serial.print(",");
+                }
+                Serial.println();
+
+                if(this->sharpingDatas(signals) == SUCCESS)
                 {
                     next = PHASE::FINISH_COMPLETE;
                 }
@@ -259,39 +258,31 @@ Dht11::PHASE Dht11::receiveDatas(PHASE current, PHASE pre)
                 {
                     next = PHASE::FINISH_FAILURE;
                 }
+                break;
             }
         }
-        this->m_timer.clearCount();
-        this->m_timer.startCount(); // count start.
 
-    }
-
-    if(this->m_timer.getElapsedTimeMicros() >= RECEIVE_DATA_TIME_UP_TIME)
-    {
-        next = PHASE::FINISH_FAILURE;
-        Serial.println("time up receive data.");
-        for(int i=0; i<RECEIVE_DATA_SIZE;i++)
+        if(this->m_timer.getElapsedTimeMicros() >= RECEIVE_DATA_TIME_UP_TIME)
         {
-            Serial.print(this->m_datas[i]);
-            Serial.print(",");
+            next = PHASE::FINISH_FAILURE;
+            break;
         }
-        Serial.println();
-        Serial.print("read index: ");
-        Serial.println(this->m_reading_index);
+        this->m_pre_signal = read_data;
     }
 
-    this->m_pre_signal = read_data;
+
+
     return next;
 }
 
-RESULT Dht11::sharpingDatas()
+RESULT Dht11::sharpingDatas(BYTE* datas)
 {
     this->m_temperature = 0;
     this->m_humidity = 0;
 
-    this->m_temperature = this->constructData(this->m_datas+HUM_DATA_BIT_SIZE, TEMP_DATA_BIT_SIZE);
+    this->m_temperature = this->constructData(datas+HUM_DATA_BIT_SIZE, TEMP_DATA_BIT_SIZE);
 
-    return this->checkParity(this->m_datas);
+    return this->checkParity(datas);
 }
 
 DWORD Dht11::constructData(BYTE* datas, DWORD size)

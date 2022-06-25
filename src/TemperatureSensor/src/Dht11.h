@@ -25,7 +25,7 @@ private:
     Timer m_retry_timer;
 
     DWORD m_reading_index;
-    BYTE* m_datas;
+    DWORD* m_datas;
 
     enum PHASE : BYTE
     {
@@ -45,7 +45,7 @@ private:
     PHASE receiveStartSignalLowPhase(PHASE current, PHASE pre);
     PHASE receiveStartSignalHighPhase(PHASE current, PHASE pre);
     PHASE receiveDatas(PHASE current, PHASE pre);
-    RESULT sharpingDatas(void);
+    RESULT sharpingDatas(BYTE* datas);
 
     DWORD constructData(BYTE* datas, DWORD size);
 

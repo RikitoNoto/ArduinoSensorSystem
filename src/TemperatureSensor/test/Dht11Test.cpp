@@ -70,18 +70,18 @@ TEST_GROUP(Dht11Test)
 
     void sendData(pinno_t pin, QWORD data, Dht11* dht, void (*f)(Dht11*))
     {
-        for(WORD i=0; i<40 ; i++)
-        {
-            BOOL bit_data = FALSE;
-            if( ((data>>(39-i))&1) == 1)
-            {
-                bit_data = TRUE;
-            }
+        // for(WORD i=0; i<40 ; i++)
+        // {
+        //     BOOL bit_data = FALSE;
+        //     if( ((data>>(39-i))&1) == 1)
+        //     {
+        //         bit_data = TRUE;
+        //     }
 
-            sendData1bit(pin, bit_data, dht, f);
-        }
-        setReadValue(pin, LOW);
-        f(dht);
+        //     sendData1bit(pin, bit_data, dht, f);
+        // }
+        // setReadValue(pin, LOW);
+        // f(dht);
     }
 
 
@@ -134,9 +134,9 @@ TEST_GROUP(Dht11Test)
         Timer::setElapsedTimeMicros(Timer::m_abs_elapsed_time_millis*1000);
         sendResponce(pin, dht, execute);
 
-        sendData(pin, data, dht, execute);
+        // sendData(pin, data, dht, execute);
 
-        CHECK_EQUAL(expect, dht->getData());
+        // CHECK_EQUAL(expect, dht->getData());
         if(need_delete)
         {
             delete dht;
