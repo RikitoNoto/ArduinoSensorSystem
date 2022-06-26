@@ -15,7 +15,12 @@ Dht11::~Dht11()
 {
 }
 
-
+/**
+* @brief start communication.
+* @return result of the start.
+* @retval SUCCESS   start communication.
+* @retval FAIL      did not start.
+*/
 RESULT Dht11::start(void)
 {
     if(this->m_retry_timer.isTimeUpMillis(RETRY_TIME_DHT11))
@@ -26,6 +31,11 @@ RESULT Dht11::start(void)
     return FAIL;
 }
 
+/**
+* @brief execute the read process.
+* @param[in] option no used param.
+* @param[in] option_count no used param.
+*/
 AnalogSensor_if::READ_STATUS Dht11::execute(WORD* option, WORD option_count)
 {
     READ_STATUS result = NONE;
