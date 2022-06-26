@@ -8,8 +8,8 @@ class Display_if
 {
     public:
         virtual void begin() = 0;
-        virtual void display(char* str, Point<DWORD>* pos, BYTE size) = 0;
-        virtual void display(char* str, Point<DWORD>* pos, BYTE size, Color::COLOR color) = 0;
+        virtual void display(const char* str, Point<DWORD>* pos, BYTE size) = 0;
+        virtual void display(const char* str, Point<DWORD>* pos, BYTE size, Color::COLOR color) = 0;
             enum DISPLAY_SIZE : BYTE
             {
                 TEXT_SIZE_MINIMUM = 1,

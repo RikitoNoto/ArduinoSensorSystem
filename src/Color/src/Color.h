@@ -29,6 +29,7 @@ public:
 
     static const ColorRGB returnColorRGB(COLOR color);
     static ColorRGB* setRGB(COLOR color, ColorRGB* color_struct);
+    BOOL isSameColorRGB(const ColorRGB* color1, const ColorRGB* color2);
 
 private:
 
