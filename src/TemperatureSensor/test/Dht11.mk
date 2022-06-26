@@ -1,5 +1,7 @@
 CC 				= g++
 CFLAGS 			= -Wall -g
+VPATH 			= spy ../src temp
+vpath %.o temp
 INCLUDE			= ../../ArduinoSensorSystemCommonInclude/src -I ../../MemoryUtility/src -I../test/spy -I../../ArduinoSensorSystemCommonInclude/test/spy
 LIBRARIES		= $$CPPUTEST_HOME/lib/libCppUTest.a
 SRCDIR 			= ../src
@@ -7,10 +9,11 @@ OBJDIR			= temp
 SPYDIR			= ../../ArduinoSensorSystemCommonInclude/test/spy
 MEM_UTL_DIR		= ../../MemoryUtility/src
 
+
 PROGRAM		 			= Dht11
-BASE_OBJECTS			= Dht11.o
+BASE_OBJECTS			= Dht11.o $(OBJDIR)/DhtBase.o
 TESTOBJECTS				= Dht11Test.o
-SPYOBJECTS				= ArduinoSpy.o $(OBJDIR)/TimerSpy.o
+SPYOBJECTS				= ArduinoSpy.o $(OBJDIR)/TimerSpy.o $(OBJDIR)/DHTSpy.o
 LIB_MEM_OBJECTS			= MemoryUtility.o
 
 all_tests: $(OBJDIR)/$(PROGRAM)

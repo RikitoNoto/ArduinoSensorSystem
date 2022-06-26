@@ -13,28 +13,10 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
 
-  if(!is_start)
-  {
-      if(dht->start())
-      {
-        is_start = TRUE;
-      }
-  }
+  if(dht->start()){
+    dht->execute();
   
-  if(is_start)
-  {
-    switch(dht->execute())
-    {
-      case Dht11::READ_STATUS::READ_SUCCESS:
-        Serial.println(dht->getData());
-        Serial.println("success");
-        is_start = FALSE;
-        break;
-      case Dht11::READ_STATUS::READ_FAILURE:
-        Serial.println("failure");
-        is_start = FALSE;
-        break;      
-    }
+    Serial.print(static_cast<float>(dht->getData())/1000);
+    Serial.println("℃");
   }
-  
 }
