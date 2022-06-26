@@ -14,8 +14,8 @@ class RobotLCD : public Display_if
         RobotLCD(BYTE cs, BYTE dc, BYTE reset);
         virtual ~RobotLCD();
         virtual void begin();
-        virtual void display(char* str, Point<DWORD>* pos, BYTE size);
-        virtual void display(char* str, Point<DWORD>* pos, BYTE size, Color::COLOR color);
+        virtual void display(const char* str, Point<DWORD>* pos, BYTE size);
+        virtual void display(const char* str, Point<DWORD>* pos, BYTE size, Color::COLOR color);
 
         virtual void setBackgroundColor(Color::COLOR color);
 

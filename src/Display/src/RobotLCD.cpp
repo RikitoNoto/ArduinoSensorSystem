@@ -30,7 +30,7 @@ void RobotLCD::begin()
 * @param[in] pos position of to display text.
 * @param[in] size size of the text.
 */
-void RobotLCD::display(char* str, Point<DWORD>* pos, BYTE size)
+void RobotLCD::display(const char* str, Point<DWORD>* pos, BYTE size)
 {
     this->display(str, pos, size, Color::COLOR::WHITE);
 }
@@ -42,7 +42,7 @@ void RobotLCD::display(char* str, Point<DWORD>* pos, BYTE size)
 * @param[in] size size of the text.
 * @param[in] color color of the text.
 */
-void RobotLCD::display(char* str, Point<DWORD>* pos, BYTE size, Color::COLOR color)
+void RobotLCD::display(const char* str, Point<DWORD>* pos, BYTE size, Color::COLOR color)
 {
     DWORD x = 0;
     DWORD y = 0;

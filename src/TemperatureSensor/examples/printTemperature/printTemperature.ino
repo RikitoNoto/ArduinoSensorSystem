@@ -1,7 +1,6 @@
 #include "Dht11.h"
 
 Dht11* dht = nullptr;
-BOOL is_start = FALSE;
 
 void setup() {
   // put your setup code here, to run once:
