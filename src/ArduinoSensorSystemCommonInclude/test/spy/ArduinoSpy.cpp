@@ -14,6 +14,9 @@ static uint8_t pin_write_called_value[PIN_MODE_INDEX_COUNT];
 // digitalRead
 static int pin_read_values[PIN_MODE_INDEX_COUNT];
 
+static bool is_write_high[PIN_MODE_INDEX_COUNT+1];
+static bool is_write_low[PIN_MODE_INDEX_COUNT+1];
+
 unsigned long micros()
 {
     return 0;
@@ -50,6 +53,15 @@ void digitalWrite(uint8_t pin, uint8_t val)
         {
             pin_write_called_pin[i]  = pin;
             pin_write_called_value[i] = val;
+
+            if(val == HIGH)
+            {
+                is_write_high[pin] = true;
+            }
+            else if(val == LOW)
+            {
+                is_write_low[pin] = true;
+            }
             break;
         }
     }
@@ -64,8 +76,7 @@ int digitalRead(uint8_t pin)
  * @brief check called the function of pinMode with expected args.
  * @details if mode is PIN_INFO_NONE, do not check mode.
  */
-// bool checkPinCalled(uint8_t pin, uint8_t mode = PIN_INFO_NONE)
-bool checkPinCalled(uint8_t pin, uint8_t mode)
+bool isPinCalled(uint8_t pin, uint8_t mode)
 {
     // check all pins(pin_mode_called_pin, pin_mode_called_mode)
     for(int i=0; i<PIN_MODE_INDEX_COUNT; i++)
@@ -99,8 +110,7 @@ bool checkPinCalled(uint8_t pin, uint8_t mode)
  * @brief check called the function of digitalWrite with expected args.
  * @details if val is PIN_WRITE_DO_NOT_CALL, do not check val.
  */
-// bool checkPinDigitalWrite(uint8_t pin, uint8_t val = PIN_WRITE_DO_NOT_CALL)
-bool checkPinDigitalWrite(uint8_t pin, uint8_t val)
+bool isPinDigitalWrite(uint8_t pin, uint8_t val)
 {
     // check all pins(pin_write_called_pin, pin_write_called_value)
     for(int i=0; i<PIN_MODE_INDEX_COUNT; i++)
@@ -130,6 +140,25 @@ bool checkPinDigitalWrite(uint8_t pin, uint8_t val)
     return false;
 }
 
+void clearWriteInfo(void)
+{
+    for(int i=0; i<PIN_MODE_INDEX_COUNT; i++)
+    {
+        is_write_high[i] = false;
+        is_write_low[i] = false;
+    }
+}
+
+bool isWriteHigh(uint8_t pin)
+{
+    return is_write_high[pin];
+}
+
+bool isWriteLow(uint8_t pin)
+{
+    return is_write_low[pin];
+}
+
 void setReadValue(uint8_t pin, int value)
 {
     pin_read_values[pin] = value;
@@ -149,5 +178,9 @@ void setupSpyArduino(void)
 
         // reset all the pin value of pin input.
         pin_read_values[i] = LOW;
+
+        // reset write info.
+        is_write_high[i+1] = false;
+        is_write_low[i+1] = false;
     }
 }
