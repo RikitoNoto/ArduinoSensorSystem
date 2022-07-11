@@ -13,6 +13,7 @@ TEST_GROUP(S2P_74HC595Test)
 
     void teardown()
     {
+        tearDownArduino();
     }
 };
 
@@ -31,9 +32,9 @@ TEST(S2P_74HC595Test, should_be_set_the_pins_as_output1)
 {
     S2P_74HC595 s2p(/*SER*/ 4, /*SRCLK*/ 3, /*SRCLR*/ 5);
 
-    CHECK(isPinCalled(3, OUTPUT));
-    CHECK(isPinCalled(4, OUTPUT));
-    CHECK(isPinCalled(5, OUTPUT));
+    CHECK(isPinMode(3, OUTPUT));
+    CHECK(isPinMode(4, OUTPUT));
+    CHECK(isPinMode(5, OUTPUT));
 }
 
 /**
@@ -43,9 +44,9 @@ TEST(S2P_74HC595Test, should_be_set_the_pins_as_output2)
 {
     S2P_74HC595 s2p(/*SER*/ 6, /*SRCLK*/ 7, /*SRCLR*/ 8);
 
-    CHECK(isPinCalled(6, OUTPUT));
-    CHECK(isPinCalled(7, OUTPUT));
-    CHECK(isPinCalled(8, OUTPUT));
+    CHECK(isPinMode(6, OUTPUT));
+    CHECK(isPinMode(7, OUTPUT));
+    CHECK(isPinMode(8, OUTPUT));
 }
 
 /**
@@ -66,7 +67,7 @@ TEST(S2P_74HC595Test, should_be_not_output_clear_pin_after_clear_output)
     S2P_74HC595 s2p(/*SER*/ 4, /*SRCLK*/ 3, /*SRCLR*/ 5);
     s2p.clearOutput();
     CHECK(isWriteLow(5));
-    CHECK(isPinDigitalWrite(5, HIGH));
+    CHECK(isPinOutput(5, HIGH));
 }
 
 /**
@@ -75,7 +76,7 @@ TEST(S2P_74HC595Test, should_be_not_output_clear_pin_after_clear_output)
 TEST(S2P_74HC595Test, should_be_not_output_clear_pin_when_not_clear_output)
 {
     S2P_74HC595 s2p(/*SER*/ 4, /*SRCLK*/ 3, /*SRCLR*/ 5);
-    CHECK(isPinDigitalWrite(5, HIGH));
+    CHECK(isPinOutput(5, HIGH));
 }
 
 /**
@@ -95,7 +96,7 @@ TEST(S2P_74HC595Test, should_be_set_low_into_serial_pin_when_clear)
     S2P_74HC595 s2p(/*SER*/ 4, /*SRCLK*/ 3, /*SRCLR*/ 5);
     s2p.setSendData(0);
     s2p.clear();
-    CHECK(isPinDigitalWrite(4, LOW));
+    CHECK(isPinOutput(4, LOW));
 }
 
 // /**
@@ -124,9 +125,9 @@ TEST(S2P_74HC595Test, should_be_output_clock)
     for(int i=0; i<PARALLEL_OUTPUT_COUNT; i++)
     {
         s2p.send();
-        CHECK(isPinDigitalWrite(3, LOW));
+        CHECK(isPinOutput(3, LOW));
         s2p.send();
-        CHECK(isPinDigitalWrite(3, HIGH));
+        CHECK(isPinOutput(3, HIGH));
     }
 }
 
@@ -141,10 +142,10 @@ TEST(S2P_74HC595Test, should_be_change_status_to_sending)
     for(int i=0; i<PARALLEL_OUTPUT_COUNT; i++)
     {
         CHECK_EQUAL(S2P_74HC595::SEND_STATUS::SENDING, s2p.send());
-        CHECK(isPinDigitalWrite(3, LOW));
+        CHECK(isPinOutput(3, LOW));
 
         CHECK_EQUAL(S2P_74HC595::SEND_STATUS::SENDING, s2p.send());
-        CHECK(isPinDigitalWrite(3, HIGH));
+        CHECK(isPinOutput(3, HIGH));
     }
 }
 
@@ -160,14 +161,14 @@ TEST(S2P_74HC595Test, should_be_change_status_to_complete)
     for(int i=0; i<PARALLEL_OUTPUT_COUNT; i++)
     {
         CHECK_EQUAL(S2P_74HC595::SEND_STATUS::SENDING, s2p.send());
-        CHECK(isPinDigitalWrite(3, LOW));
+        CHECK(isPinOutput(3, LOW));
 
         CHECK_EQUAL(S2P_74HC595::SEND_STATUS::SENDING, s2p.send());
-        CHECK(isPinDigitalWrite(3, HIGH));
+        CHECK(isPinOutput(3, HIGH));
     }
 
     CHECK_EQUAL(S2P_74HC595::SEND_STATUS::COMPLETE, s2p.send());
-    CHECK(isPinDigitalWrite(3, LOW));
+    CHECK(isPinOutput(3, LOW));
 }
 
 /**
@@ -182,16 +183,16 @@ TEST(S2P_74HC595Test, should_be_output_low_into_serial_pin_when_set_0)
     for(int i=0; i<PARALLEL_OUTPUT_COUNT; i++)
     {
         CHECK_EQUAL(S2P_74HC595::SEND_STATUS::SENDING, s2p.send());
-        CHECK(isPinDigitalWrite(3, LOW));
+        CHECK(isPinOutput(3, LOW));
 
         CHECK_EQUAL(S2P_74HC595::SEND_STATUS::SENDING, s2p.send());
-        CHECK(isPinDigitalWrite(3, HIGH));
+        CHECK(isPinOutput(3, HIGH));
 
-        CHECK(isPinDigitalWrite(4, LOW));
+        CHECK(isPinOutput(4, LOW));
     }
 
     CHECK_EQUAL(S2P_74HC595::SEND_STATUS::COMPLETE, s2p.send());
-    CHECK(isPinDigitalWrite(3, LOW));
+    CHECK(isPinOutput(3, LOW));
 }
 
 /**
@@ -207,18 +208,18 @@ TEST(S2P_74HC595Test, should_be_send_the_data_1)
     {
         if(i!=0)
         {
-            CHECK(isPinDigitalWrite(4, LOW));
+            CHECK(isPinOutput(4, LOW));
         }
         CHECK_EQUAL(S2P_74HC595::SEND_STATUS::SENDING, s2p.send());
-        CHECK(isPinDigitalWrite(3, LOW));
+        CHECK(isPinOutput(3, LOW));
 
         CHECK_EQUAL(S2P_74HC595::SEND_STATUS::SENDING, s2p.send());
-        CHECK(isPinDigitalWrite(3, HIGH));
+        CHECK(isPinOutput(3, HIGH));
     }
 
     CHECK_EQUAL(S2P_74HC595::SEND_STATUS::COMPLETE, s2p.send());
-    CHECK(isPinDigitalWrite(3, LOW));
-    CHECK(isPinDigitalWrite(4, HIGH));
+    CHECK(isPinOutput(3, LOW));
+    CHECK(isPinOutput(4, HIGH));
 }
 
 int main(int argc, char** argv)

@@ -46,12 +46,21 @@ public:
 extern Serial_ Serial;
 
 
-#define PIN_MODE_INDEX_COUNT    (32)
 #define PIN_INFO_NONE           (0xFF)
 #define PIN_WRITE_DO_NOT_CALL   (0xFF)
-void setupSpyArduino(void);
-bool isPinCalled(uint8_t pin, uint8_t mode = PIN_INFO_NONE);
-bool isPinDigitalWrite(uint8_t pin, uint8_t val = PIN_WRITE_DO_NOT_CALL);
+
+enum ARDUINO_TYPE
+{
+    UNO,
+};
+
+void setupSpyArduino(ARDUINO_TYPE type=UNO);
+void tearDownArduino(void);
+bool isPinMode(uint8_t pin, uint8_t mode);
+bool isPinOutput(uint8_t pin, uint8_t val);
+
+// bool isPinCalled(uint8_t pin, uint8_t mode = PIN_INFO_NONE);
+// bool isPinDigitalWrite(uint8_t pin, uint8_t val = PIN_WRITE_DO_NOT_CALL);
 
 void clearWriteInfo(void);
 bool isWriteHigh(uint8_t pin);

@@ -1,21 +1,21 @@
 #include <Arduino.h>
+#include <string.h>
+#include "DataType.h"
+
+#define DEFAULT_PIN_COUNT               (14)
+
+BYTE getPinCount(ARDUINO_TYPE type);
 
 Serial_ Serial;
 
+static ARDUINO_TYPE target_arduino_type;      // current test arduino type
 
-// pinMode
-static uint8_t pin_mode_called_pin[PIN_MODE_INDEX_COUNT];
-static uint8_t pin_mode_called_mode[PIN_MODE_INDEX_COUNT];
+static uint8_t* pin_set_modes;      // pin modes
+static uint8_t* pin_output_values;  // digital write values
+static uint8_t* pin_input_values;   // digital read values
 
-// digitalWrite
-static uint8_t pin_write_called_pin[PIN_MODE_INDEX_COUNT];
-static uint8_t pin_write_called_value[PIN_MODE_INDEX_COUNT];
-
-// digitalRead
-static int pin_read_values[PIN_MODE_INDEX_COUNT];
-
-static bool is_write_high[PIN_MODE_INDEX_COUNT+1];
-static bool is_write_low[PIN_MODE_INDEX_COUNT+1];
+static bool* is_write_high;
+static bool* is_write_low;
 
 unsigned long micros()
 {
@@ -24,136 +24,63 @@ unsigned long micros()
 
 void pinMode(uint8_t pin, uint8_t mode)
 {
-    for(int i=0; i<PIN_MODE_INDEX_COUNT; i++)
-    {
-        // if called this pin or last of array.
-        if( (pin_mode_called_pin[i] == pin) ||
-            (pin_mode_called_pin[i] == PIN_INFO_NONE) )
-        {
-            pin_mode_called_pin[i]  = pin;
-            pin_mode_called_mode[i] = mode;
-
-            // if the mode is pull up, set the value of read to high.
-            // if(mode == INPUT_PULLUP)
-            // {
-            //     pin_read_values[pin] = HIGH;
-            // }
-            break;
-        }
-    }
+    pin_set_modes[pin] = mode;
 }
 
 void digitalWrite(uint8_t pin, uint8_t val)
 {
-    for(int i=0; i<PIN_MODE_INDEX_COUNT; i++)
-    {
-        // if called this pin or last of array.
-        if( (pin_write_called_pin[i] == pin) ||
-            (pin_write_called_pin[i] == PIN_WRITE_DO_NOT_CALL) )
-        {
-            pin_write_called_pin[i]  = pin;
-            pin_write_called_value[i] = val;
+    if(pin_set_modes[pin] == OUTPUT){
+        pin_output_values[pin] = val;
 
-            if(val == HIGH)
-            {
-                is_write_high[pin] = true;
-            }
-            else if(val == LOW)
-            {
-                is_write_low[pin] = true;
-            }
-            break;
+        if(val == HIGH)
+        {
+            is_write_high[pin] = true;
+        }
+        else if(val == LOW)
+        {
+            is_write_low[pin] = true;
         }
     }
 }
 
 int digitalRead(uint8_t pin)
 {
-    return pin_read_values[pin];
+    return pin_input_values[pin];
 }
 
 /**
- * @brief check called the function of pinMode with expected args.
- * @details if mode is PIN_INFO_NONE, do not check mode.
+ * @brief   returns whether the pin mode is correct.
  */
-bool isPinCalled(uint8_t pin, uint8_t mode)
+bool isPinMode(uint8_t pin, uint8_t mode)
 {
-    // check all pins(pin_mode_called_pin, pin_mode_called_mode)
-    for(int i=0; i<PIN_MODE_INDEX_COUNT; i++)
-    {
-        // if pin called.
-        if(pin_mode_called_pin[i] == pin)
-        {
-            // if set mode.
-            if(mode != PIN_INFO_NONE)
-            {
-                // if mode is same.
-                if(pin_mode_called_mode[i] == mode)
-                {
-                    return true;
-                }
-                // else is false.
-            }
-            // mode no set.
-            else
-            {
-                // if pin is same, return true.
-                return true;
-            }
-        }
-    }
-
-    return false;
+    return pin_set_modes[pin] == mode;
 }
 
 /**
- * @brief check called the function of digitalWrite with expected args.
- * @details if val is PIN_WRITE_DO_NOT_CALL, do not check val.
+ * @brief   returns whether the pin output is correct.
  */
-bool isPinDigitalWrite(uint8_t pin, uint8_t val)
+bool isPinOutput(uint8_t pin, uint8_t val)
 {
-    // check all pins(pin_write_called_pin, pin_write_called_value)
-    for(int i=0; i<PIN_MODE_INDEX_COUNT; i++)
-    {
-        // if pin called.
-        if(pin_write_called_pin[i] == pin)
-        {
-            // if set mode.
-            if(val != PIN_WRITE_DO_NOT_CALL)
-            {
-                // if mode is same.
-                if(pin_write_called_value[i] == val)
-                {
-                    return true;
-                }
-                // else is false.
-            }
-            // mode no set.
-            else
-            {
-                // if pin is same, return true.
-                return true;
-            }
-        }
-    }
-
-    return false;
+    return pin_output_values[pin]==val;
 }
 
 void clearWriteInfo(void)
 {
-    for(int i=0; i<PIN_MODE_INDEX_COUNT; i++)
-    {
-        is_write_high[i] = false;
-        is_write_low[i] = false;
-    }
+    memset(is_write_high, false, getPinCount(target_arduino_type));
+    memset(is_write_low, false, getPinCount(target_arduino_type));
 }
 
+/**
+ * @brief   returns whether the pin output has been high even once.
+ */
 bool isWriteHigh(uint8_t pin)
 {
     return is_write_high[pin];
 }
 
+/**
+ * @brief   returns whether the pin output has been low even once.
+ */
 bool isWriteLow(uint8_t pin)
 {
     return is_write_low[pin];
@@ -161,26 +88,52 @@ bool isWriteLow(uint8_t pin)
 
 void setReadValue(uint8_t pin, int value)
 {
-    pin_read_values[pin] = value;
+    pin_input_values[pin] = value;
 }
 
-void setupSpyArduino(void)
+void setupSpyArduino(ARDUINO_TYPE type)
 {
-    for(int i=0; i<PIN_MODE_INDEX_COUNT; i++)
+    target_arduino_type = type;
+
+    pin_set_modes = new uint8_t[getPinCount(target_arduino_type)];
+    memset(pin_set_modes, PIN_INFO_NONE, getPinCount(target_arduino_type));
+
+    pin_output_values = new uint8_t[getPinCount(target_arduino_type)];
+    memset(pin_output_values, PIN_WRITE_DO_NOT_CALL, getPinCount(target_arduino_type));
+
+    pin_input_values = new uint8_t[getPinCount(target_arduino_type)];
+    memset(pin_input_values, LOW, getPinCount(target_arduino_type));
+
+
+    is_write_high = new bool[getPinCount(target_arduino_type)];
+    memset(is_write_high, false, getPinCount(target_arduino_type));
+
+    is_write_low = new bool[getPinCount(target_arduino_type)];
+    memset(is_write_low, false, getPinCount(target_arduino_type));
+
+}
+
+void tearDownArduino()
+{
+    delete[] pin_set_modes;
+    delete[] pin_output_values;
+    delete[] pin_input_values;
+    delete[] is_write_high;
+    delete[] is_write_low;
+}
+
+
+BYTE getPinCount(ARDUINO_TYPE type)
+{
+    BYTE pin_count = 0;
+    switch (type)
     {
-        // reset all the infos of pin mode.
-        pin_mode_called_pin[i] = PIN_INFO_NONE;
-        pin_mode_called_mode[i] = PIN_INFO_NONE;
+        case ARDUINO_TYPE::UNO:
+            pin_count = 14;
+            break;
 
-        // reset all the pin value of pin output.
-        pin_write_called_pin[i] = PIN_WRITE_DO_NOT_CALL;
-        pin_write_called_value[i] = PIN_WRITE_DO_NOT_CALL;
-
-        // reset all the pin value of pin input.
-        pin_read_values[i] = LOW;
-
-        // reset write info.
-        is_write_high[i+1] = false;
-        is_write_low[i+1] = false;
+        default:
+            break;
     }
+    return pin_count;
 }
