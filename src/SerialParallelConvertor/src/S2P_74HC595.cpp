@@ -47,11 +47,16 @@ S2P_74HC595::SEND_STATUS S2P_74HC595::send(void)
             this->m_status = SENDING;
             // no break;
         case SENDING:
-            digitalWrite(this->m_serial_pin, LOW);
+            // digitalWrite(this->m_serial_pin, LOW);
             digitalWrite(this->m_clock_pin, this->m_current_clock);
             if(this->m_current_clock == HIGH)
             {
                 this->m_clock_count++;
+            }
+            else
+            {
+                SIGNAL data = ((this->m_send_data >> (SEND_DATA_BIT_COUNT - this->m_clock_count)) & 0x01) ? HIGH : LOW;
+                digitalWrite(this->m_serial_pin, data);
             }
 
             // after sended clock 8 times,(a clock is one set of low and high.)
