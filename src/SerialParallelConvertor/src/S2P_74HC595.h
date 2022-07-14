@@ -26,6 +26,8 @@ private:
     BYTE m_send_data;
 
     SEND_STATUS m_status;
+
+    SIGNAL getSerialDataBit(BYTE data, BYTE clock);
 };
 
 #endif // _S2P_74HC595_H_

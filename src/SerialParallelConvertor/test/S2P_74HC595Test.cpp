@@ -1,7 +1,14 @@
 #include <CppUTest/CommandLineTestRunner.h>
 #include <CppUTest/TestHarness.h>
 #include <Arduino.h>
+#include "string.h"
 #include "S2P_74HC595.h"
+
+#define _PIN_COUNT_     (8)
+
+static int pre_signal = LOW;
+static int signal_counter = 0;
+static int expect_signals[_PIN_COUNT_] = {LOW};
 
 TEST_GROUP(S2P_74HC595Test)
 {
@@ -9,13 +16,40 @@ TEST_GROUP(S2P_74HC595Test)
     void setup()
     {
         setupSpyArduino();
+        pre_signal = LOW;
+        memset(expect_signals, LOW, sizeof(expect_signals));
+        signal_counter = 0;
     }
 
     void teardown()
     {
         tearDownArduino();
     }
+
+    void checkClock(S2P_74HC595* s2p, uint8_t pin)
+    {
+        for(int i=0; i<PARALLEL_OUTPUT_COUNT; i++)
+        {
+            CHECK_EQUAL(S2P_74HC595::SEND_STATUS::SENDING, s2p->send());
+            CHECK(isPinOutput(pin, LOW));
+
+            CHECK_EQUAL(S2P_74HC595::SEND_STATUS::SENDING, s2p->send());
+            CHECK(isPinOutput(pin, HIGH));
+        }
+    }
+
 };
+
+void checkOutput(uint8_t pin, uint8_t val)
+{
+    if(pin == 3){
+        if( (val == LOW) && (pre_signal == HIGH)){
+            CHECK(isPinOutput(4, expect_signals[signal_counter]));
+            signal_counter++;
+        }
+        pre_signal = val;
+    }
+}
 
 /**
 * should be create a instance.
@@ -99,19 +133,23 @@ TEST(S2P_74HC595Test, should_be_set_low_into_serial_pin_when_clear)
     CHECK(isPinOutput(4, LOW));
 }
 
-// /**
-// * should be not able to set data for sending.
-// */
-// TEST(S2P_74HC595Test, should_be_not_able_to_set_data_for_sending)
-// {
-//     S2P_74HC595 s2p(/*SER*/ 4, /*SRCLK*/ 3, /*SRCLR*/ 5);
-//     CHECK_EQUAL(TRUE, s2p.setSendData(0));
-//     for(int i=0; i<PARALLEL_OUTPUT_COUNT; i++)
-//     {
-//         s2p.send();
-//         CHECK_EQUAL(FALSE, s2p.setSendData(0));
-//     }
-// }
+/**
+* should be not able to set data for sending.
+*/
+TEST(S2P_74HC595Test, should_be_not_able_to_set_data_for_sending)
+{
+    S2P_74HC595 s2p(/*SER*/ 4, /*SRCLK*/ 3, /*SRCLR*/ 5);
+    CHECK_EQUAL(TRUE, s2p.setSendData(0));
+    for(int i=0; i<PARALLEL_OUTPUT_COUNT; i++)
+    {
+        CHECK_EQUAL(S2P_74HC595::SEND_STATUS::SENDING, s2p.send());
+        CHECK_EQUAL(FALSE, s2p.setSendData(0));
+        CHECK_EQUAL(S2P_74HC595::SEND_STATUS::SENDING, s2p.send());
+        CHECK_EQUAL(FALSE, s2p.setSendData(0));
+    }
+    CHECK_EQUAL(S2P_74HC595::SEND_STATUS::COMPLETE, s2p.send());
+    CHECK_EQUAL(FALSE, s2p.setSendData(0));
+}
 
 /**
 * should be output clock.
@@ -139,14 +177,7 @@ TEST(S2P_74HC595Test, should_be_change_status_to_sending)
     S2P_74HC595 s2p(/*SER*/ 4, /*SRCLK*/ 3, /*SRCLR*/ 5);
     s2p.setSendData(0);
     s2p.clear();
-    for(int i=0; i<PARALLEL_OUTPUT_COUNT; i++)
-    {
-        CHECK_EQUAL(S2P_74HC595::SEND_STATUS::SENDING, s2p.send());
-        CHECK(isPinOutput(3, LOW));
-
-        CHECK_EQUAL(S2P_74HC595::SEND_STATUS::SENDING, s2p.send());
-        CHECK(isPinOutput(3, HIGH));
-    }
+    checkClock(&s2p, 3);
 }
 
 /**
@@ -158,14 +189,7 @@ TEST(S2P_74HC595Test, should_be_change_status_to_complete)
     s2p.setSendData(0);
     s2p.clear();
 
-    for(int i=0; i<PARALLEL_OUTPUT_COUNT; i++)
-    {
-        CHECK_EQUAL(S2P_74HC595::SEND_STATUS::SENDING, s2p.send());
-        CHECK(isPinOutput(3, LOW));
-
-        CHECK_EQUAL(S2P_74HC595::SEND_STATUS::SENDING, s2p.send());
-        CHECK(isPinOutput(3, HIGH));
-    }
+    checkClock(&s2p, 3);
 
     CHECK_EQUAL(S2P_74HC595::SEND_STATUS::COMPLETE, s2p.send());
     CHECK(isPinOutput(3, LOW));
@@ -180,19 +204,14 @@ TEST(S2P_74HC595Test, should_be_output_low_into_serial_pin_when_set_0)
     s2p.setSendData(0);
     s2p.clear();
 
-    for(int i=0; i<PARALLEL_OUTPUT_COUNT; i++)
-    {
-        CHECK_EQUAL(S2P_74HC595::SEND_STATUS::SENDING, s2p.send());
-        CHECK(isPinOutput(3, LOW));
+    memset(expect_signals, LOW, sizeof(expect_signals));
+    setOutputCallback(checkOutput);
 
-        CHECK_EQUAL(S2P_74HC595::SEND_STATUS::SENDING, s2p.send());
-        CHECK(isPinOutput(3, HIGH));
-
-        CHECK(isPinOutput(4, LOW));
-    }
+    checkClock(&s2p, 3);
 
     CHECK_EQUAL(S2P_74HC595::SEND_STATUS::COMPLETE, s2p.send());
     CHECK(isPinOutput(3, LOW));
+    CHECK(8<=signal_counter);
 }
 
 /**
@@ -204,22 +223,16 @@ TEST(S2P_74HC595Test, should_be_send_the_data_1)
     s2p.setSendData(1);
     s2p.clear();
 
-    for(int i=0; i<PARALLEL_OUTPUT_COUNT; i++)
-    {
-        if(i!=0)
-        {
-            CHECK(isPinOutput(4, LOW));
-        }
-        CHECK_EQUAL(S2P_74HC595::SEND_STATUS::SENDING, s2p.send());
-        CHECK(isPinOutput(3, LOW));
+    memset(expect_signals, LOW, sizeof(expect_signals));
+    expect_signals[7] = HIGH;
+    setOutputCallback(checkOutput);
 
-        CHECK_EQUAL(S2P_74HC595::SEND_STATUS::SENDING, s2p.send());
-        CHECK(isPinOutput(3, HIGH));
-    }
+    checkClock(&s2p, 3);
 
     CHECK_EQUAL(S2P_74HC595::SEND_STATUS::COMPLETE, s2p.send());
     CHECK(isPinOutput(3, LOW));
     CHECK(isPinOutput(4, HIGH));
+    CHECK(8<=signal_counter);
 }
 
 int main(int argc, char** argv)

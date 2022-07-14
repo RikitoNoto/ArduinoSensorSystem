@@ -35,8 +35,12 @@ void S2P_74HC595::clearOutput(void)
 
 BOOL S2P_74HC595::setSendData(BYTE data)
 {
-    this->m_send_data = data;
-    return TRUE;
+    BOOL result = FALSE;
+    if(this->m_status == SEND_STATUS::IDLE){
+        this->m_send_data = data;
+        result = TRUE;
+    }
+    return result;
 }
 
 S2P_74HC595::SEND_STATUS S2P_74HC595::send(void)
@@ -47,17 +51,13 @@ S2P_74HC595::SEND_STATUS S2P_74HC595::send(void)
             this->m_status = SENDING;
             // no break;
         case SENDING:
-            // digitalWrite(this->m_serial_pin, LOW);
             digitalWrite(this->m_clock_pin, this->m_current_clock);
             if(this->m_current_clock == HIGH)
             {
                 this->m_clock_count++;
             }
-            else
-            {
-                SIGNAL data = ((this->m_send_data >> (SEND_DATA_BIT_COUNT - this->m_clock_count)) & 0x01) ? HIGH : LOW;
-                digitalWrite(this->m_serial_pin, data);
-            }
+
+            digitalWrite(this->m_serial_pin, this->getSerialDataBit(this->m_send_data, this->m_clock_count));
 
             // after sended clock 8 times,(a clock is one set of low and high.)
             // return the signal to low to complete.
@@ -80,4 +80,10 @@ S2P_74HC595::SEND_STATUS S2P_74HC595::send(void)
 void S2P_74HC595::clear(void)
 {
     digitalWrite(this->m_serial_pin, LOW);
+}
+
+
+inline SIGNAL S2P_74HC595::getSerialDataBit(BYTE data, BYTE clock)
+{
+    return ((data >> (SEND_DATA_BIT_COUNT - clock)) & 0x01) ? HIGH : LOW;
 }

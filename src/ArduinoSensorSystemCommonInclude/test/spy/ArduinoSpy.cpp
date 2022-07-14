@@ -16,6 +16,7 @@ static uint8_t* pin_input_values;   // digital read values
 
 static bool* is_write_high;
 static bool* is_write_low;
+static void (*output_callback)(uint8_t pin, uint8_t val);
 
 unsigned long micros()
 {
@@ -41,6 +42,12 @@ void digitalWrite(uint8_t pin, uint8_t val)
             is_write_low[pin] = true;
         }
     }
+
+    // call callback spy function.
+    if(output_callback != nullptr){
+        output_callback(pin, val);
+    }
+
 }
 
 int digitalRead(uint8_t pin)
@@ -91,6 +98,11 @@ void setReadValue(uint8_t pin, int value)
     pin_input_values[pin] = value;
 }
 
+void setOutputCallback(void (*func)(uint8_t pin, uint8_t val))
+{
+    output_callback = func;
+}
+
 void setupSpyArduino(ARDUINO_TYPE type)
 {
     target_arduino_type = type;
@@ -111,6 +123,7 @@ void setupSpyArduino(ARDUINO_TYPE type)
     is_write_low = new bool[getPinCount(target_arduino_type)];
     memset(is_write_low, false, getPinCount(target_arduino_type));
 
+    output_callback = nullptr;
 }
 
 void tearDownArduino()
