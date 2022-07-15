@@ -33,6 +33,11 @@ void S2P_74HC595::clearOutput(void)
     digitalWrite(this->m_clear_pin, HIGH);
 }
 
+/**
+* @brief set send data.
+* @details set send data. if it is sending, not set and return false.
+* @param[in] data set data as bit data.
+*/
 BOOL S2P_74HC595::setSendData(BYTE data)
 {
     BOOL result = FALSE;
@@ -43,6 +48,11 @@ BOOL S2P_74HC595::setSendData(BYTE data)
     return result;
 }
 
+/**
+* @brief send data.
+* @details this method need to call repetition.
+* @return send status.
+*/
 S2P_74HC595::SEND_STATUS S2P_74HC595::send(void)
 {
     switch (this->m_status)
@@ -77,12 +87,21 @@ S2P_74HC595::SEND_STATUS S2P_74HC595::send(void)
     return this->m_status;
 }
 
+/**
+* @brief clear and initialize.
+*/
 void S2P_74HC595::clear(void)
 {
     digitalWrite(this->m_serial_pin, LOW);
 }
 
-
+/**
+* @brief get bit data to send.
+* @details this method need to call repetition.
+* @param[in] data send data
+* @param[in] clock current clock count
+* @return send bit data.
+*/
 inline SIGNAL S2P_74HC595::getSerialDataBit(BYTE data, BYTE clock)
 {
     return ((data >> (SEND_DATA_BIT_COUNT - clock)) & 0x01) ? HIGH : LOW;
