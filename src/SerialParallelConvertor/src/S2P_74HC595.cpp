@@ -69,7 +69,7 @@ S2P_74HC595::SEND_STATUS S2P_74HC595::send(void)
                 this->m_clock_count++;
             }
 
-            // after sended clock 8 times,(a clock is one set of low and high.)
+            // after sended clock 8+1(1clock after send data) times,(a clock is one set of low and high.)
             // return the signal to low to complete.
             if( (this->m_clock_count >= SEND_DATA_BIT_COUNT+1) &&
                 (this->m_current_clock == LOW) )

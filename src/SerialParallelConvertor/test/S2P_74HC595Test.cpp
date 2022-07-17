@@ -12,7 +12,7 @@ static int expect_signals[_PIN_COUNT_] = {LOW};
 
 TEST_GROUP(S2P_74HC595Test)
 {
-    static const BYTE PARALLEL_OUTPUT_COUNT = 8;
+    static const uint8_t PARALLEL_OUTPUT_COUNT = 8;
     void setup()
     {
         setupSpyArduino();
@@ -235,7 +235,6 @@ TEST(S2P_74HC595Test, should_be_send_the_data_1)
 
     CHECK_EQUAL(S2P_74HC595::SEND_STATUS::COMPLETE, s2p.send());
     CHECK(isPinOutput(3, LOW));
-    // CHECK(isPinOutput(4, HIGH));
     CHECK(8<=signal_counter);
 }
 
