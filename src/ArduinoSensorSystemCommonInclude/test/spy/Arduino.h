@@ -58,7 +58,12 @@ void setupSpyArduino(ARDUINO_TYPE type=UNO);
 void tearDownArduino(void);
 bool isPinMode(uint8_t pin, uint8_t mode);
 bool isPinOutput(uint8_t pin, uint8_t val);
-void setOutputCallback(void (*func)(uint8_t pin, uint8_t val));
+
+typedef bool (*OutputCallback)(uint8_t pin, uint8_t val);
+
+void setOutputCallback(OutputCallback func);
+void setOutputCallback(OutputCallback func, uint8_t pin);
+void setOutputCallback(OutputCallback func, uint8_t pin, int life_time);
 
 // bool isPinCalled(uint8_t pin, uint8_t mode = PIN_INFO_NONE);
 // bool isPinDigitalWrite(uint8_t pin, uint8_t val = PIN_WRITE_DO_NOT_CALL);

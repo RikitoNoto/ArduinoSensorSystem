@@ -35,7 +35,8 @@ void S2P_74HC595::clearOutput(void)
 
 /**
 * @brief set send data.
-* @details set send data. if it is sending, not set and return false.
+* @details  set send data. if it is sending, not set and return false.
+*           data order(as binary): hgfedcba
 * @param[in] data set data as bit data.
 */
 BOOL S2P_74HC595::setSendData(BYTE data)
@@ -61,17 +62,16 @@ S2P_74HC595::SEND_STATUS S2P_74HC595::send(void)
             this->m_status = SENDING;
             // no break;
         case SENDING:
+            digitalWrite(this->m_serial_pin, this->getSerialDataBit(this->m_send_data, this->m_clock_count));
             digitalWrite(this->m_clock_pin, this->m_current_clock);
             if(this->m_current_clock == HIGH)
             {
                 this->m_clock_count++;
             }
 
-            digitalWrite(this->m_serial_pin, this->getSerialDataBit(this->m_send_data, this->m_clock_count));
-
             // after sended clock 8 times,(a clock is one set of low and high.)
             // return the signal to low to complete.
-            if( (this->m_clock_count >= SEND_DATA_BIT_COUNT) &&
+            if( (this->m_clock_count >= SEND_DATA_BIT_COUNT+1) &&
                 (this->m_current_clock == LOW) )
             {
                 this->m_status = COMPLETE;

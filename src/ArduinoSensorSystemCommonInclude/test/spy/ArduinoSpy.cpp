@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <string.h>
+#include <climits>
 #include "DataType.h"
 
 #define DEFAULT_PIN_COUNT               (14)
@@ -16,7 +17,15 @@ static uint8_t* pin_input_values;   // digital read values
 
 static bool* is_write_high;
 static bool* is_write_low;
-static void (*output_callback)(uint8_t pin, uint8_t val);
+
+struct DigitalWriteSpy
+{
+    int spy_life_time;
+    OutputCallback call_back;
+};
+
+static DigitalWriteSpy* digital_write_spy;
+
 
 unsigned long micros()
 {
@@ -41,12 +50,19 @@ void digitalWrite(uint8_t pin, uint8_t val)
         {
             is_write_low[pin] = true;
         }
+
+        // call callback spy function.
+        if( (digital_write_spy[pin].call_back != nullptr) &&
+            (digital_write_spy[pin].spy_life_time > 0) ){
+            if(digital_write_spy[pin].call_back(pin, val) == false){
+                digital_write_spy[pin].spy_life_time = 0;
+            }
+            else{
+                digital_write_spy[pin].spy_life_time--;
+            }
+        }
     }
 
-    // call callback spy function.
-    if(output_callback != nullptr){
-        output_callback(pin, val);
-    }
 
 }
 
@@ -98,9 +114,23 @@ void setReadValue(uint8_t pin, int value)
     pin_input_values[pin] = value;
 }
 
-void setOutputCallback(void (*func)(uint8_t pin, uint8_t val))
+void setOutputCallback(OutputCallback func)
 {
-    output_callback = func;
+    for(uint8_t pin=0; pin < getPinCount(target_arduino_type); pin++)
+    {
+        setOutputCallback(func, pin, INT_MAX);
+    }
+}
+
+void setOutputCallback(OutputCallback func, uint8_t pin)
+{
+    setOutputCallback(func, pin, INT_MAX);
+}
+
+void setOutputCallback(OutputCallback func, uint8_t pin, int life_time)
+{
+    digital_write_spy[pin].call_back = func;
+    digital_write_spy[pin].spy_life_time = life_time;
 }
 
 void setupSpyArduino(ARDUINO_TYPE type)
@@ -123,7 +153,12 @@ void setupSpyArduino(ARDUINO_TYPE type)
     is_write_low = new bool[getPinCount(target_arduino_type)];
     memset(is_write_low, false, getPinCount(target_arduino_type));
 
-    output_callback = nullptr;
+    digital_write_spy = new DigitalWriteSpy[getPinCount(target_arduino_type)];
+    for(int i=0; i<getPinCount(target_arduino_type); i++)
+    {
+        digital_write_spy[i].call_back = nullptr;
+        digital_write_spy[i].spy_life_time = 0;
+    }
 }
 
 void tearDownArduino()
@@ -133,6 +168,7 @@ void tearDownArduino()
     delete[] pin_input_values;
     delete[] is_write_high;
     delete[] is_write_low;
+    delete[] digital_write_spy;
 }
 
 
