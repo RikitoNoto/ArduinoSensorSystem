@@ -8,6 +8,7 @@ class S2P_74HC595 : public SerialToParallelConvertor_if
 {
 public:
     S2P_74HC595(pinno_t serial, pinno_t clock, pinno_t clear);
+    S2P_74HC595(pinno_t serial, pinno_t clock, pinno_t clear, pinno_t rclock);
 
     SEND_STATUS send(void);
     void clear(void);
@@ -19,6 +20,7 @@ private:
     pinno_t m_clear_pin;
     pinno_t m_clock_pin;
     pinno_t m_serial_pin;
+    pinno_t m_rclock_pin;
 
     SIGNAL m_current_clock;
     BYTE m_clock_count;

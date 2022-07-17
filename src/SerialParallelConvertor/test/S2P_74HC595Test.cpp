@@ -26,9 +26,9 @@ TEST_GROUP(S2P_74HC595Test)
         tearDownArduino();
     }
 
-    void checkClock(S2P_74HC595* s2p, uint8_t pin)
+    void checkClock(S2P_74HC595* s2p, uint8_t pin, int count=PARALLEL_OUTPUT_COUNT+1)
     {
-        for(int i=0; i<PARALLEL_OUTPUT_COUNT+1; i++)
+        for(int i=0; i<count; i++)
         {
             CHECK_EQUAL(S2P_74HC595::SEND_STATUS::SENDING, s2p->send());
             CHECK(isPinOutput(pin, LOW));
@@ -36,6 +36,22 @@ TEST_GROUP(S2P_74HC595Test)
             CHECK_EQUAL(S2P_74HC595::SEND_STATUS::SENDING, s2p->send());
             CHECK(isPinOutput(pin, HIGH));
         }
+    }
+
+    void checkSendData(S2P_74HC595* s2p)
+    {
+        s2p->clear();
+        s2p->setSendData(1);
+        checkClock(s2p, 3, PARALLEL_OUTPUT_COUNT);
+        CHECK(isPinOutput(6, HIGH));
+
+        CHECK_EQUAL(S2P_74HC595::SEND_STATUS::SENDING, s2p->send());
+        CHECK(isPinOutput(6, HIGH));
+
+        CHECK_EQUAL(S2P_74HC595::SEND_STATUS::SENDING, s2p->send());
+        CHECK(isPinOutput(6, LOW));
+
+        CHECK_EQUAL(S2P_74HC595::SEND_STATUS::COMPLETE, s2p->send());
     }
 
 };
@@ -132,8 +148,8 @@ TEST(S2P_74HC595Test, should_be_set_send_data)
 TEST(S2P_74HC595Test, should_be_set_low_into_serial_pin_when_clear)
 {
     S2P_74HC595 s2p(/*SER*/ 4, /*SRCLK*/ 3, /*SRCLR*/ 5);
-    s2p.setSendData(0);
     s2p.clear();
+    s2p.setSendData(0);
     CHECK(isPinOutput(4, LOW));
 }
 
@@ -161,8 +177,8 @@ TEST(S2P_74HC595Test, should_be_not_able_to_set_data_for_sending)
 TEST(S2P_74HC595Test, should_be_output_clock)
 {
     S2P_74HC595 s2p(/*SER*/ 4, /*SRCLK*/ 3, /*SRCLR*/ 5);
-    s2p.setSendData(0);
     s2p.clear();
+    s2p.setSendData(0);
 
     for(int i=0; i<PARALLEL_OUTPUT_COUNT; i++)
     {
@@ -179,8 +195,8 @@ TEST(S2P_74HC595Test, should_be_output_clock)
 TEST(S2P_74HC595Test, should_be_change_status_to_sending)
 {
     S2P_74HC595 s2p(/*SER*/ 4, /*SRCLK*/ 3, /*SRCLR*/ 5);
-    s2p.setSendData(0);
     s2p.clear();
+    s2p.setSendData(0);
     checkClock(&s2p, 3);
 }
 
@@ -190,8 +206,8 @@ TEST(S2P_74HC595Test, should_be_change_status_to_sending)
 TEST(S2P_74HC595Test, should_be_change_status_to_complete)
 {
     S2P_74HC595 s2p(/*SER*/ 4, /*SRCLK*/ 3, /*SRCLR*/ 5);
-    s2p.setSendData(0);
     s2p.clear();
+    s2p.setSendData(0);
 
     checkClock(&s2p, 3);
 
@@ -205,8 +221,8 @@ TEST(S2P_74HC595Test, should_be_change_status_to_complete)
 TEST(S2P_74HC595Test, should_be_output_low_into_serial_pin_when_set_0)
 {
     S2P_74HC595 s2p(/*SER*/ 4, /*SRCLK*/ 3, /*SRCLR*/ 5);
-    s2p.setSendData(0);
     s2p.clear();
+    s2p.setSendData(0);
 
     memset(expect_signals, LOW, sizeof(expect_signals));
     setOutputCallback(checkOutput, 3);
@@ -224,8 +240,8 @@ TEST(S2P_74HC595Test, should_be_output_low_into_serial_pin_when_set_0)
 TEST(S2P_74HC595Test, should_be_send_the_data_1)
 {
     S2P_74HC595 s2p(/*SER*/ 4, /*SRCLK*/ 3, /*SRCLR*/ 5);
-    s2p.setSendData(1);
     s2p.clear();
+    s2p.setSendData(1);
 
     memset(expect_signals, LOW, sizeof(expect_signals));
     expect_signals[7] = HIGH;
@@ -236,6 +252,54 @@ TEST(S2P_74HC595Test, should_be_send_the_data_1)
     CHECK_EQUAL(S2P_74HC595::SEND_STATUS::COMPLETE, s2p.send());
     CHECK(isPinOutput(3, LOW));
     CHECK(8<=signal_counter);
+}
+
+/**
+* should be create instance with RCLK pin.
+*/
+TEST(S2P_74HC595Test, should_be_create_instance_with_RCLK_pin)
+{
+    S2P_74HC595 s2p(/*SER*/ 4, /*SRCLK*/ 3, /*SRCLR*/ 5, /*RCLK*/ 6);
+}
+
+/**
+* should be set low after clear.
+*/
+TEST(S2P_74HC595Test, should_be_set_low_after_clear)
+{
+    S2P_74HC595 s2p(/*SER*/ 4, /*SRCLK*/ 3, /*SRCLR*/ 5, /*RCLK*/ 6);
+    s2p.clear();
+    CHECK(isPinOutput(6, HIGH));
+}
+
+/**
+* should be output rclk when clear output.
+*/
+TEST(S2P_74HC595Test, should_be_output_rclk_when_clear_output)
+{
+    S2P_74HC595 s2p(/*SER*/ 4, /*SRCLK*/ 3, /*SRCLR*/ 5, /*RCLK*/ 6);
+    s2p.clearOutput();
+    CHECK(isWriteLow(6));
+    CHECK(isPinOutput(6, HIGH));
+}
+
+/**
+* should be not output rclk after sending.
+*/
+TEST(S2P_74HC595Test, should_be_not_output_rclk_after_sending)
+{
+    S2P_74HC595 s2p(/*SER*/ 4, /*SRCLK*/ 3, /*SRCLR*/ 5, /*RCLK*/ 6);
+    checkSendData(&s2p);
+}
+
+/**
+* should be send twice.
+*/
+TEST(S2P_74HC595Test, should_be_send_twice)
+{
+    S2P_74HC595 s2p(/*SER*/ 4, /*SRCLK*/ 3, /*SRCLR*/ 5, /*RCLK*/ 6);
+    checkSendData(&s2p);
+    checkSendData(&s2p);
 }
 
 int main(int argc, char** argv)

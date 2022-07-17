@@ -12,6 +12,11 @@ public:
         return *signal;
     }
 
+    static inline SIGNAL notSignal(SIGNAL signal)
+    {
+        return !signal;
+    }
+
 };
 
 #endif // _ARDUINO_UTILITY_H_

@@ -4,20 +4,25 @@
 
 #define SEND_DATA_BIT_COUNT     (8)
 
-S2P_74HC595::S2P_74HC595(pinno_t serial, pinno_t clock, pinno_t clear)
+S2P_74HC595::S2P_74HC595(pinno_t serial, pinno_t clock, pinno_t clear) : S2P_74HC595::S2P_74HC595(serial, clock, clear, PIN_NO_NONE)
+{
+}
+
+S2P_74HC595::S2P_74HC595(pinno_t serial, pinno_t clock, pinno_t clear, pinno_t rclock)
 {
     pinMode(serial, OUTPUT);
     pinMode(clock, OUTPUT);
     pinMode(clear, OUTPUT);
+    if(rclock != PIN_NO_NONE){
+        pinMode(rclock, OUTPUT);
+    }
 
     this->m_clear_pin = clear;
     this->m_clock_pin = clock;
     this->m_serial_pin = serial;
+    this->m_rclock_pin = rclock;
 
-    digitalWrite(this->m_clear_pin, HIGH);
-    this->m_current_clock = LOW;
-    this->m_status = IDLE;
-    this->m_clock_count = 0;
+    this->clear();
 }
 
 /**
@@ -29,8 +34,14 @@ S2P_74HC595::S2P_74HC595(pinno_t serial, pinno_t clock, pinno_t clear)
 */
 void S2P_74HC595::clearOutput(void)
 {
-    digitalWrite(this->m_clear_pin, LOW);
-    digitalWrite(this->m_clear_pin, HIGH);
+    digitalWrite(this->m_clear_pin, LOW);       // output clear
+
+    // output rclk.
+    digitalWrite(this->m_rclock_pin, HIGH);
+    digitalWrite(this->m_rclock_pin, LOW);
+
+    digitalWrite(this->m_clear_pin, HIGH);      // return clear pin
+    digitalWrite(this->m_rclock_pin, HIGH);     // return rclk pin
 }
 
 /**
@@ -64,6 +75,12 @@ S2P_74HC595::SEND_STATUS S2P_74HC595::send(void)
         case SENDING:
             digitalWrite(this->m_serial_pin, this->getSerialDataBit(this->m_send_data, this->m_clock_count));
             digitalWrite(this->m_clock_pin, this->m_current_clock);
+
+            if( (this->m_rclock_pin != PIN_NO_NONE) &&
+                (this->m_clock_count >= SEND_DATA_BIT_COUNT) ){
+                digitalWrite(this->m_rclock_pin, ArduinoUtility::notSignal(this->m_current_clock));
+            }
+
             if(this->m_current_clock == HIGH)
             {
                 this->m_clock_count++;
@@ -93,6 +110,11 @@ S2P_74HC595::SEND_STATUS S2P_74HC595::send(void)
 void S2P_74HC595::clear(void)
 {
     digitalWrite(this->m_serial_pin, LOW);
+    digitalWrite(this->m_rclock_pin, HIGH);
+    this->m_status = SEND_STATUS::IDLE;
+    digitalWrite(this->m_clear_pin, HIGH);
+    this->m_current_clock = LOW;
+    this->m_clock_count = 0;
 }
 
 /**
