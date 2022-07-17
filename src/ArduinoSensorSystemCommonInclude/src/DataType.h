@@ -21,5 +21,6 @@ typedef DWORD MEMORY_SIZE_T; // memory size
 typedef MEMORY_SIZE_T SIZE_T; // utilty size
 
 typedef BYTE pinno_t;
+#define PIN_NO_NONE     (0xFF)
 
 #endif // _DATA_TYPE_H_
